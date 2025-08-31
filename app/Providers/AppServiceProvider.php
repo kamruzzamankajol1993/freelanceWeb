@@ -9,6 +9,8 @@ use Carbon\Carbon;
 use App\Models\SystemInformation;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\View;
+use App\Models\Category;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -32,6 +34,13 @@ class AppServiceProvider extends ServiceProvider
         'offer' => 'App\Models\Offer',
         'service' => 'App\Models\Service',
     ]);
+
+
+    // Using a view composer to share categories with all views
+        View::composer('*', function ($view) {
+            $categories = Category::where('status', 1)->latest()->get();
+            $view->with('categories', $categories);
+        });
         ///new code start
 
         view()->composer('*', function ($view)
@@ -62,7 +71,7 @@ class AppServiceProvider extends ServiceProvider
                 $front_ins_d = $frontEndData->description;
 
                 $front_develop_by = $frontEndData->develop_by;
-
+ $front_ins_url = $frontEndData->main_url;
             } else {
                 // Default values if no data is found
                 $front_icon_name = '';
@@ -70,6 +79,7 @@ class AppServiceProvider extends ServiceProvider
                 $front_black_logo_name = '';
                 $front_ins_name = '';
                 $front_ins_add = '';
+                $front_ins_url='';
                
                 $front_ins_email = '';
 
@@ -79,6 +89,7 @@ class AppServiceProvider extends ServiceProvider
                 $front_develop_by = '';
             }
 
+            view()->share('front_ins_url', $front_ins_url);
               view()->share('front_icon_name', $front_icon_name);
               view()->share('front_logo_name', $front_logo_name);
                 view()->share('front_black_logo_name', $front_black_logo_name);

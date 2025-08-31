@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Size;
 class ProductVariant extends Model
 {
     use HasFactory;
@@ -19,8 +19,9 @@ class ProductVariant extends Model
         'additional_price',
     ];
 
-    protected $casts = [
+     protected $casts = [
         'sizes' => 'array',
+        'variant_image' => 'array', // Add this line
     ];
 
     protected $appends = ['detailed_sizes'];

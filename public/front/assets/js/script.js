@@ -96,57 +96,7 @@ if (searchInput) {
   });
 }
 
-// product details
-function startCountdown() {
-  // Set initial time (10 hours, 20 minutes, 15 seconds, 56 milliseconds)
-  let hours = 10;
-  let minutes = 20;
-  let seconds = 15;
-  let milliseconds = 56;
 
-  function updateCountdown() {
-    // Decrease milliseconds
-    milliseconds--;
-
-    if (milliseconds < 0) {
-      milliseconds = 99;
-      seconds--;
-
-      if (seconds < 0) {
-        seconds = 59;
-        minutes--;
-
-        if (minutes < 0) {
-          minutes = 59;
-          hours--;
-
-          if (hours < 0) {
-            // Reset timer when it reaches 0
-            hours = 10;
-            minutes = 20;
-            seconds = 15;
-            milliseconds = 56;
-          }
-        }
-      }
-    }
-
-    // Format and display the countdown
-    const formattedTime =
-      String(hours).padStart(2, "0") +
-      ":" +
-      String(minutes).padStart(2, "0") +
-      ":" +
-      String(seconds).padStart(2, "0") +
-      ":" +
-      String(milliseconds).padStart(2, "0");
-
-    document.getElementById("countdown").textContent = formattedTime;
-  }
-
-  // Update countdown every 10ms for smooth animation
-  setInterval(updateCountdown, 10);
-}
 
 // Image Gallery Function
 function changeImage(thumbnailContainer, newImageSrc) {
@@ -192,7 +142,7 @@ function initializeAnimations() {
 
 // Initialize everything when page loads
 document.addEventListener("DOMContentLoaded", function () {
-  startCountdown();
+  //startCountdown();
   initializeAnimations();
   refreshCartBadgeIfPossible();
 

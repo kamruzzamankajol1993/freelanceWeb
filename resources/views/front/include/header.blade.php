@@ -9,7 +9,7 @@
           <!-- Logo -->
           <div class="navbar-brand px-lg-4">
             <div class="logo">
-              <a href="index.html"><img src="{{asset('/')}}public/front/assets/img/logo.png" alt=""></a>
+              <a href="{{route('home.index')}}"><img src="{{$front_ins_url}}{{$front_logo_name}}" alt=""></a>
             </div>
           </div>
 
@@ -17,7 +17,7 @@
           <div class="search-container d-none d-md-flex">
             <div class="search-wrapper">
               <i class="fas fa-search search-icon"></i>
-              <input type="search" id="search" name="search" class="form-control search-input" placeholder="Search Your Dream">
+              <input type="search" id="search" name="search" autocomplete="off" class="form-control search-input" placeholder="Search Your Dream">
             </div>
           </div>
 
@@ -30,10 +30,10 @@
             </div>
 
             <!-- Cart -->
-            <a href="basket.html">
+            <a href="{{route('cart.show')}}">
               <div class="cart-icon px-lg-3 me-3">
                 <img src="{{asset('/')}}public/front/assets/img/cart.png" alt="">
-                <span class="cart-badge">02</span>
+                <span class="cart-badge" id="cart-item-count">0</span>
               </div>
             </a>
 
@@ -45,3 +45,20 @@
         </div>
       </nav>
     </header>
+    <script>
+    // Global function to update the header cart counter
+    function updateCartCounter() {
+        fetch('{{ route('cart.content') }}')
+            .then(response => response.json())
+            .then(data => {
+                const cartCountEl = document.getElementById('cart-item-count');
+                if (cartCountEl) {
+                    cartCountEl.textContent = data.totalItems || 0;
+                }
+            })
+            .catch(error => console.error('Error fetching cart count:', error));
+    }
+
+    // Update cart count when the page loads
+    document.addEventListener('DOMContentLoaded', updateCartCounter);
+</script>

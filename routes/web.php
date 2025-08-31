@@ -36,9 +36,11 @@ Route::controller(FrontController::class)->group(function () {
 // START: MODIFIED CART ROUTES
 
 Route::controller(CartController::class)->prefix('cart')->name('cart.')->group(function () {
+     Route::get('/', 'show')->name('show');
     Route::post('/add', 'addToCart')->name('add');
     Route::get('/content', 'getCartContent')->name('content');
     Route::post('/update', 'updateCartItem')->name('update');
     Route::post('/remove', 'removeCartItem')->name('remove');
+    Route::post('/clear', 'clearCart')->name('clear'); // Add this route
 });
 // END: MODIFIED CART ROUTES

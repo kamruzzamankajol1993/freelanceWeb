@@ -5,7 +5,7 @@
         <div class="col-lg-4 col-md-6 col-12">
           <div class="mb-3">
             <a href="index.html" class="logo-footer">
-              <img src="assets/img/logo-2.png" alt="">
+              <img src="{{$front_ins_url}}{{$front_black_logo_name}}" alt="">
             </a>
           </div>
           <p class="footer-description justify-center pe-md-4">
@@ -18,11 +18,11 @@
           <div class="payment-section">
             <h6 class="payment-title">Accepted Payments</h6>
             <div class="payment-methods">
-              <a href=""> <img src="assets/img/bkash.png" alt="Visa" class="payment-logo"></a>
-              <a href=""> <img src="assets/img/nagad 1.png" alt="Mastercard" class="payment-logo"></a>
-              <a href=""> <img src="assets/img/Rocket 1.png" alt="American Express" class="payment-logo"></a>
-              <a href=""><img src="assets/img/Master Card 1.png" alt="Google Pay" class="payment-logo"></a>
-              <a href=""><img src="assets/img/Visa 1.png" alt="UPI" class="payment-logo"></a>
+              <a href=""> <img src="{{asset('/')}}public/front/assets/img/bkash.png" alt="Visa" class="payment-logo"></a>
+              <a href=""> <img src="{{asset('/')}}public/front/assets/img/nagad 1.png" alt="Mastercard" class="payment-logo"></a>
+              <a href=""> <img src="{{asset('/')}}public/front/assets/img/Rocket 1.png" alt="American Express" class="payment-logo"></a>
+              <a href=""><img src="{{asset('/')}}public/front/assets/img/Master Card 1.png" alt="Google Pay" class="payment-logo"></a>
+              <a href=""><img src="{{asset('/')}}public/front/assets/img/Visa 1.png" alt="UPI" class="payment-logo"></a>
             </div>
           </div>
         </div>
@@ -31,11 +31,13 @@
         <div class="col-lg-2 col-md-6 col-6" style="margin-left: -24px;">
           <h6 class="footer-title">Department</h6>
           <ul class="footer-links">
-            <li><a href="#">Clothes</a></li>
-            <li><a href="#">Electronics</a></li>
-            <li><a href="#">Leather</a></li>
-            <li><a href="#">Watch</a></li>
-            <li><a href="#">Wall Frame</a></li>
+            {{-- START: DYNAMIC CATEGORY LIST --}}
+            @if($categories->isNotEmpty())
+                @foreach($categories as $category)
+                    <li><a href="{{ route('category.show', $category->slug) }}">{{ $category->name }}</a></li>
+                @endforeach
+            @endif
+            {{-- END: DYNAMIC CATEGORY LIST --}}
           </ul>
         </div>
 
@@ -82,17 +84,17 @@
           <div class="col-md-6">
             <div class="d-flex gap-5">
               <div class="become-seller">
-                <p class="mb-0 d-flex gap-1 align-items-center"><img src="assets/img/bag.png" alt="">Become a seller</p>
+                <p class="mb-0 d-flex gap-1 align-items-center"><img src="{{asset('/')}}public/front/assets/img/bag.png" alt="">Become a seller</p>
               </div>
               <div class="help-center">
-                <img src="assets/img/what.png" alt="">
+                <img src="{{asset('/')}}public/front/assets/img/what.png" alt="">
                 <span style="color: #666; font-size: 14px;">Help Center</span>
               </div>
             </div>
           </div>
           <div class="col-md-6">
-            <p class="copyright gap-1 d-flex justify-content-end"><img src="assets/img/copyright.png" alt="">All rights
-              reserved by <strong>Premier Web Retail </strong> 2025</p>
+            <p class="copyright gap-1 d-flex justify-content-end"><img src="{{asset('/')}}public/front/assets/img/copyright.png" alt="">All rights
+              reserved by <strong>{{$front_ins_name}} </strong> 2025</p>
           </div>
         </div>
       </div>

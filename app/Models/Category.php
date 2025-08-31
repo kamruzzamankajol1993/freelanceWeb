@@ -17,6 +17,11 @@ class Category extends Model
         'status',
     ];
 
+     public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+
     // Automatically create a slug from the name
     protected static function boot()
     {

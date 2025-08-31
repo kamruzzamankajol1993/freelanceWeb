@@ -988,7 +988,7 @@ select:focus {
 }
 
 .card-1 {
-  background-image: url("assets/img/card-1.png");
+  background-image: url("img/card-1.png");
 }
 
 .card-2 {
@@ -1132,7 +1132,7 @@ select:focus {
 /* fast deliver */
 .delivery-section {
   min-height: 60vh;
-  background-image: url("assets/img/bg-img.png");
+  background-image: url("img/bg-img.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1191,7 +1191,7 @@ select:focus {
 }
 
 .delivery-coupon .delivery-card {
-  background-image: url("assets/img/Mask\ group.png");
+  background-image: url("img/Mask\ group.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1204,7 +1204,7 @@ select:focus {
 }
 
 .delivery-coupon .coupon-card {
-  background-image: url("assets/img/coupon.png");
+  background-image: url("img/coupon.png");
 }
 
 .delivery-coupon .card-badge {

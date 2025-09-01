@@ -41,7 +41,7 @@ return [
             'transport' => 'smtp',
             'scheme' => env('MAIL_SCHEME'),
             'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', 'probashihelicopter.com'),
+            'host' => env('MAIL_HOST', 'smtp.gmail.com'),
             'port' => env('MAIL_PORT', 465),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
@@ -111,8 +111,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'admin@probashihelicopter.com'),
-        'name' => env('MAIL_FROM_NAME', 'Probashi Helicopter'),
+        'address' => env('MAIL_FROM_ADDRESS', 'kajol1122018@gmail.com'),
+        'name' => env('MAIL_FROM_NAME', 'Pick And Drop'),
     ],
 
 ];

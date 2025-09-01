@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Main function to fetch and render the entire cart
      function renderCart() {
         const publicurl = '{{ $front_ins_url . 'public/uploads/' }}';
+        const publicCheckout = '{{route('checkOutPage')}}';
         cartItemsContainer.innerHTML = `<tr><td colspan="5" class="text-center">Loading cart...</td></tr>`;
 
         fetch('{{ route('cart.content') }}')
@@ -109,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <div class="text-end">
                             <h4>Subtotal: ৳${data.subtotal.toFixed(2)}</h4>
-                            <a href="#" class="btn btn-primary btn-lg hero-btn mt-2">Continue to checkout</a>
+                            <a href="${publicCheckout}" class="btn btn-primary btn-lg hero-btn mt-2">Continue to checkout</a>
                         </div>
                     `;
 

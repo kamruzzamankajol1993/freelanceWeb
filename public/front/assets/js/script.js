@@ -206,27 +206,4 @@ function navigateToProfile() {
   window.location.href = 'profile.html';
 }
 
-// Add click event listeners to all profile icons
-document.addEventListener('DOMContentLoaded', function() {
-  const profileIcons = document.querySelectorAll('.user-icon');
-  
-  profileIcons.forEach(icon => {
-    icon.addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      // Check if user is logged in (you can implement your own logic here)
-      // For now, open the login modal instead of redirecting
-      const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-      loginModal.show();
-    });
-    
-    // Add hover effect
-    icon.addEventListener('mouseenter', function() {
-      this.style.transform = 'scale(1.05)';
-    });
-    
-    icon.addEventListener('mouseleave', function() {
-      this.style.transform = 'scale(1)';
-    });
-  });
-});
+

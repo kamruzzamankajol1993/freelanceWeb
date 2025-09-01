@@ -122,8 +122,23 @@ class AuthController extends Controller
         ]);
 
         // 3. Update the User with the customer_id
-        // $user->customer_id = $customer->id;
-        // $user->save();
+         $user->customer_id = $customer->id;
+         $user->save();
+
+         // **FIX**: Create the default addresses in the customer_addresses table
+        CustomerAddress::create([
+            'customer_id' => $customer->id,
+            'address' => $tempUserData['address'],
+            'address_type' => 'billing',
+            'is_default' => 1,
+        ]);
+
+        CustomerAddress::create([
+            'customer_id' => $customer->id,
+            'address' => $tempUserData['address'],
+            'address_type' => 'shipping',
+            'is_default' => 1,
+        ]);
 
 
         // Clear session data

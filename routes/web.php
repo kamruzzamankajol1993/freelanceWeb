@@ -18,8 +18,15 @@ Route::get('/clear', function() {
 Route::controller(CheckoutController::class)->group(function () {
 
     Route::get('/checkOutPage', 'checkOutPage')->name('checkOutPage');
-
+Route::post('/checkout/update-shipping', 'updateShipping')->name('checkout.shipping.update');
+    Route::post('/checkout/apply-coupon', 'applyCoupon')->name('checkout.coupon.apply');
+    Route::post('/checkout/remove-coupon', 'removeCoupon')->name('checkout.coupon.remove');
+    Route::post('/checkout/place-order', 'placeOrder')->name('checkout.place.order');
+    Route::get('/order-success', 'orderSuccess')->name('order.success');
 });
+
+
+
 });
 // Authentication Routes
 Route::controller(AuthController::class)->group(function () {
@@ -48,6 +55,13 @@ Route::controller(AuthController::class)->group(function () {
 });
 
 Route::controller(FrontController::class)->group(function () {
+
+Route::post('/track-order', 'trackOrder')->name('tracking.track');
+    Route::get('/about-us', 'aboutUs')->name('about-us');
+    Route::get('/support', 'support')->name('support');
+    Route::get('/orderTracking', 'orderTracking')->name('orderTracking');
+
+    Route::get('/product-search', 'searchProducts')->name('product.search');
 
     Route::get('/', 'index')->name('home.index');
     Route::get('/category/{slug}', 'category')->name('category.show');

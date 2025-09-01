@@ -10,6 +10,8 @@ use Carbon\Carbon;
 use App\Models\Category; // Import the Category model
 use Illuminate\Support\Str; // Import the Str facade for text limiting
 use App\Models\OfferBanner;
+use DB;
+use App\Models\Order;
 class FrontController extends Controller
 {
        public function index(){
@@ -128,6 +130,76 @@ class FrontController extends Controller
         // The 'detailed_sizes' accessor on the ProductVariant model will automatically be included
         // when the model is converted to JSON, which is perfect for our needs.
         return response()->json($product);
+    }
+
+     public function searchProducts(Request $request)
+    {
+
+        
+
+        $query = $request->get('query');
+
+        if ($query) {
+            $products = Product::where('name', 'LIKE', "%{$query}%")
+                               ->orWhere('product_code', 'LIKE', "%{$query}%")
+                               ->select('name', 'slug', 'main_image') // Select only needed fields
+                               ->limit(5) // Limit the number of results
+                               ->get();
+            
+            // Modify image paths to be absolute URLs
+            $products->each(function($product) {
+                if (!empty($product->main_image)) {
+                    $frontEndData = DB::table('system_information')->first();
+        $front_ins_url = $frontEndData->main_url.'public/uploads/';
+                    $product->main_image = $front_ins_url.$product->main_image[0];
+                } else {
+                    // Provide a placeholder if no image exists
+                    $product->main_image = 'https://placehold.co/50x50?text=No+Img';
+                }
+            });
+
+            return response()->json($products);
+        }
+
+        return response()->json([]);
+    }
+
+
+    public function aboutUs(){
+
+        return view('front.aboutus');
+    }
+
+    public function support(){
+
+        return view('front.support');
+
+    }
+
+    public function orderTracking(){
+
+        return view('front.tracking');
+
+    }
+
+    /**
+     * Handle the AJAX request to track an order.
+     */
+    public function trackOrder(Request $request)
+    {
+        $request->validate(['invoice_no' => 'required|string']);
+
+        $order = Order::where('invoice_no', $request->invoice_no)
+                      ->withCount('orderDetails') // Efficiently count items
+                      ->first();
+
+        if ($order) {
+            // Format the date for better display
+            $order->formatted_created_at = $order->created_at->format('d M Y');
+            return response()->json($order);
+        }
+
+        return response()->json(['error' => 'Order not found. Please check the order number and try again.'], 404);
     }
 
 

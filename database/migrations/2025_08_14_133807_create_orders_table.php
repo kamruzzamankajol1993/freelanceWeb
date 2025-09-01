@@ -27,6 +27,7 @@ return new class extends Migration
             $table->text('shipping_address');
             $table->text('billing_address')->nullable();
             $table->string('payment_method')->nullable();
+            $table->string('payment_phone')->nullable();
             $table->string('payment_status')->default('pending'); // e.g., pending, paid, failed
             $table->string('payment_term')->nullable(); // e.g., COD, Online
             $table->string('order_from')->nullable(); // e.g., web, app

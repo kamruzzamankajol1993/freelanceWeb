@@ -15,6 +15,7 @@ class Order extends Model
         'subtotal',
         'shipping_cost',
         'discount',
+        'payment_phone',
         'total_amount',
         'total_pay',
         'due',

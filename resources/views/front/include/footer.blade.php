@@ -69,7 +69,7 @@
         <div class="col-lg-2 col-md-6 col-6" style="margin-left: -24px;">
           <h6 class="footer-title">Help</h6>
           <ul class="footer-links">
-            <li><a href="#">Order Support</a></li>
+            <li><a href="{{route('support')}}">Order Support</a></li>
             <li><a href="#">Returns & Exchanges</a></li>
             <li><a href="#">Payments & Refunds</a></li>
             <li><a href="#">Product & Seller Inquiries</a></li>

@@ -5,6 +5,7 @@ use App\Http\Controllers\FrontController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\PasswordResetController;
 
 Route::get('/clear', function() {
     \Illuminate\Support\Facades\Artisan::call('cache:clear');
@@ -56,7 +57,7 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::controller(FrontController::class)->group(function () {
 
-Route::post('/track-order', 'trackOrder')->name('tracking.track');
+Route::post('/track-order-front', 'trackOrder')->name('tracking.track');
     Route::get('/about-us', 'aboutUs')->name('about-us');
     Route::get('/support', 'support')->name('support');
     Route::get('/orderTracking', 'orderTracking')->name('orderTracking');
@@ -92,3 +93,10 @@ Route::controller(CartController::class)->prefix('cart')->name('cart.')->group(f
     Route::post('/clear', 'clearCart')->name('clear'); // Add this route
 });
 // END: MODIFIED CART ROUTES
+
+// --- NEW PASSWORD RESET ROUTES ---
+Route::controller(PasswordResetController::class)->group(function () {
+    Route::post('/password-email', 'sendResetOtp')->name('password.email');
+    Route::post('/password-verify-otp', 'verifyResetOtp')->name('password.verify.otp');
+    Route::post('/password-update', 'updatePassword')->name('password.update');
+});

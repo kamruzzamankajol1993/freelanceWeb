@@ -25,9 +25,9 @@ Dashboard
     <div class="container">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="page-hero-title">Welcome, {{ $user->name }}</h2>
+                <h2 class="page-hero-title">Personal Hub</h2>
                 <div class="page-hero-nav-links bg-white rounded">
-                    <a href="{{ route('home.index') }}">Home</a> - <a class="fw-bold" href="#">Your Dashboard</a>
+                    <a href="{{ route('home.index') }}">Home</a> - <a class="fw-bold" href="#">Identity Page</a>
                 </div>
             </div>
         </div>
@@ -369,7 +369,10 @@ Dashboard
                                     <!-- Old Password Field -->
                                     <div class="form-group">
                                         <div class="password-field">
-                                            <input class="form-control manage-personal-info-input" type="password" name="old_password" placeholder="Enter your old password">
+                                            <div class="input-group">
+                                                <input class="form-control manage-personal-info-input" type="password" name="old_password" placeholder="Enter your old password" required>
+                                                <span class="input-group-text toggle-password"><i class="fas fa-eye"></i></span>
+                                            </div>
                                             @error('old_password')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                                         </div>
                                     </div>
@@ -377,28 +380,55 @@ Dashboard
                                     <!-- New Password Field -->
                                     <div class="form-group">
                                         <div class="password-field">
-                                            <input class="form-control manage-personal-info-input" type="password" name="password" placeholder="Create new password">
+                                            <div class="input-group">
+                                                <input class="form-control manage-personal-info-input" type="password" name="password" id="dashboardNewPassword" placeholder="Create new password" required>
+                                                <span class="input-group-text toggle-password"><i class="fas fa-eye"></i></span>
+                                            </div>
                                             @error('password')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                                         </div>
                                     </div>
                                     <div class="form-group">
                                         <div class="password-field">
-                                            <input class="form-control manage-personal-info-input" type="password" name="password_confirmation" placeholder="Confirm your new password">
+                                            <div class="input-group">
+                                                <input class="form-control manage-personal-info-input" type="password" name="password_confirmation" id="dashboardConfirmPassword" placeholder="Confirm your new password" required>
+                                                <span class="input-group-text toggle-password"><i class="fas fa-eye"></i></span>
+                                            </div>
                                         </div>
                                     </div>
+
+                                    <!-- Password Match Error -->
+                                    <div class="match-error small text-danger mt-1" id="dashboardPasswordMatchError" style="display: none;">
+                                        Passwords do not match
+                                    </div>
+
+                                    <!-- Password Strength Indicator -->
+                                    <div class="strength-container">
+                                        <div class="strength-bars">
+                                            <div class="strength-bar" id="bar1"></div>
+                                            <div class="strength-bar" id="bar2"></div>
+                                            <div class="strength-bar" id="bar3"></div>
+                                            <div class="strength-bar" id="bar4"></div>
+                                        </div>
+                                        <div class="strength-label-container">
+                                            <span class="strength-label" id="current-strength-label"></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Password Requirements -->
+                                    <div class="requirements small mt-2">
+                                        <div class="requirement" id="dash-req-lower"><i class="fas fa-times text-danger"></i><span>At least one lowercase letter</span></div>
+                                        <div class="requirement" id="dash-req-length"><i class="fas fa-times text-danger"></i><span>Minimum 8 characters</span></div>
+                                        <div class="requirement" id="dash-req-upper"><i class="fas fa-times text-danger"></i><span>At least one uppercase letter</span></div>
+                                        <div class="requirement" id="dash-req-number"><i class="fas fa-times text-danger"></i><span>At least one number</span></div>
+                                    </div>
+
                                     <div class="mt-4">
                                         <button type="submit" class="btn btn-primary access-now-btn">Change Password</button>
                                     </div>
                                 </div>
                             </form>
 
-                            {{-- <!-- Goodbye Section -->
-                            <div class="manage-personal-info-goodbye-section ps-lg-5 mt-5">
-                                <h6 class="manage-personal-info-section-title">Goodbye?</h6>
-                                <p class="small">These actions are permanent and cannot be undone.</p>
-                                <button class="btn manage-personal-info-btn-danger mb-3 px-4">Deactivate Account</button>
-                                <button class="btn manage-personal-info-btn-danger px-4">Permanently Delete Account</button>
-                            </div> --}}
+                            {{-- Goodbye Section --}}
                         </div>
                     </div>
                 </div>
@@ -555,6 +585,143 @@ document.addEventListener('DOMContentLoaded', function () {
                 reader.readAsDataURL(file);
             }
         });
+    }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const heroTitle = document.querySelector('.page-hero-title');
+    const heroBreadcrumb = document.querySelector('.page-hero-nav-links .fw-bold');
+
+    const overviewTab = document.getElementById('overview-tab');
+    const trackingTab = document.getElementById('order-tracking-tab');
+    const settingsTab = document.getElementById('settings-tab');
+
+    const tabInfo = {
+        overview: {
+            title: 'Personal Hub',
+            breadcrumb: 'Identity Page'
+        },
+        tracking: {
+            title: 'Track it Live',
+            breadcrumb: 'Your Delivery Timeline'
+        },
+        settings: {
+            title: 'Customize Your Experience',
+            breadcrumb: 'Your Preferences'
+        }
+    };
+
+    function updateHeroContent(tabKey) {
+        if (heroTitle && heroBreadcrumb && tabInfo[tabKey]) {
+            heroTitle.textContent = tabInfo[tabKey].title;
+            heroBreadcrumb.textContent = tabInfo[tabKey].breadcrumb;
+        }
+    }
+
+    if (overviewTab) {
+        overviewTab.addEventListener('click', () => updateHeroContent('overview'));
+    }
+    if (trackingTab) {
+        trackingTab.addEventListener('click', () => updateHeroContent('tracking'));
+    }
+    if (settingsTab) {
+        settingsTab.addEventListener('click', () => updateHeroContent('settings'));
+    }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const passwordContainer = document.querySelector('.password-container');
+    if (!passwordContainer) return;
+
+    const newPasswordInput = document.getElementById('dashboardNewPassword');
+    const confirmPasswordInput = document.getElementById('dashboardConfirmPassword');
+    const matchError = document.getElementById('dashboardPasswordMatchError');
+    const togglePasswordIcons = passwordContainer.querySelectorAll('.toggle-password');
+
+    const requirements = {
+        lower: document.getElementById('dash-req-lower'),
+        length: document.getElementById('dash-req-length'),
+        upper: document.getElementById('dash-req-upper'),
+        number: document.getElementById('dash-req-number')
+    };
+
+    const strength = {
+        bars: passwordContainer.querySelectorAll('.strength-bar'),
+        label: document.getElementById('current-strength-label')
+    };
+
+    const strengthLevels = {
+        0: { label: '', color: '' },
+        1: { label: 'Weak', color: 'weak' },
+        2: { label: 'Medium', color: 'medium' },
+        3: { label: 'Strong', color: 'strong' },
+        4: { label: 'Very Strong', color: 'very-strong' }
+    };
+
+    // --- Show/Hide Password Functionality ---
+    togglePasswordIcons.forEach(icon => {
+        icon.addEventListener('click', function() {
+            const input = this.previousElementSibling;
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+            this.querySelector('i').classList.toggle('fa-eye');
+            this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+    });
+
+    // --- Live Password Validation ---
+    if (newPasswordInput) {
+        const validateRequirement = (element, isValid) => {
+            if (!element) return;
+            const icon = element.querySelector('i');
+            if (isValid) {
+                icon.classList.remove('fa-times', 'text-danger');
+                icon.classList.add('fa-check', 'text-success');
+            } else {
+                icon.classList.remove('fa-check', 'text-success');
+                icon.classList.add('fa-times', 'text-danger');
+            }
+        };
+
+        const checkPasswordStrength = (password) => {
+            let score = 0;
+            if (/[a-z]/.test(password)) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (password.length >= 8) score++;
+            
+            strength.bars.forEach((bar, index) => {
+                bar.className = 'strength-bar'; // Reset
+                if (index < score) {
+                    bar.classList.add(strengthLevels[score].color);
+                }
+            });
+            strength.label.textContent = strengthLevels[score].label;
+        };
+
+        const checkPasswords = () => {
+            const password = newPasswordInput.value;
+            // Requirement validation
+            validateRequirement(requirements.lower, /[a-z]/.test(password));
+            validateRequirement(requirements.length, password.length >= 8);
+            validateRequirement(requirements.upper, /[A-Z]/.test(password));
+            validateRequirement(requirements.number, /[0-9]/.test(password));
+            
+            // Strength validation
+            checkPasswordStrength(password);
+            
+            // Match validation
+            if (confirmPasswordInput.value && password !== confirmPasswordInput.value) {
+                matchError.style.display = 'block';
+            } else {
+                matchError.style.display = 'none';
+            }
+        };
+
+        newPasswordInput.addEventListener('keyup', checkPasswords);
+        confirmPasswordInput.addEventListener('keyup', checkPasswords);
     }
 });
 </script>

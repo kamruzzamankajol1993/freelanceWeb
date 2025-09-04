@@ -13,7 +13,7 @@ About Us
       <div class="container">
         <div class="row">
           <div class="col-12 text-center">
-            <h2 class="page-hero-title">Meet Premier Web Retail </h2>
+            <h2 class="page-hero-title">Meet Pick N Drop </h2>
             <div class="page-hero-nav-links bg-white rounded">
               <a href="{{ route('home.index') }}">Home</a> - <a class="fw-bold" href="#about">About Us</a>
             </div>
@@ -29,10 +29,10 @@ About Us
         <div class="row justify-content-center">
           <div class=" col-12">
             <div class="content-overlay">
-              <h2 class="section-title">About - Premier Web Retail </h2>
+              <h2 class="section-title">About - Pick N Drop </h2>
 
               <p class="content-text">
-                Welcome to Premier Web Retail  – where convenience meets speed, and every delivery feels like magic. We're not
+                Welcome to Pick N Drop  – where convenience meets speed, and every delivery feels like magic. We're not
                 just another e-commerce company. We're your personal pickup partner, your delivery sidekick, and your
                 go-to marketplace – all rolled into one. From daily must-haves to last-minute surprises, we make sure
                 everything you need gets from point A to point B, quick, easy, and hassle-free.
@@ -48,7 +48,7 @@ About Us
               </ul>
 
               <p class="content-text">
-                With a strong commitment to speed, service, and technology, Premier Web Retail  is redefining how goods move
+                With a strong commitment to speed, service, and technology, Pick N Drop  is redefining how goods move
                 in today's digital world.
               </p>
             </div>

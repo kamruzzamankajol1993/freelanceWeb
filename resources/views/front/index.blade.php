@@ -14,29 +14,27 @@ Home
       <!-- First Section - 7 Column Product Row -->
       <section class="product-showcase my-5">
         <div class="row g-3">
-            {{-- Loop through the showcase products fetched from the controller --}}
-            @foreach($showcaseProducts as $product)
-            <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl">
-                <a href="{{ route('product.show', $product->slug) }}">
-                    <div class="product-item position-relative">
-                        {{-- Add a category tag --}}
-                        @if($product->category)
-                            <span class="position-absolute top-0 start-0 bg-primary text-white py-1 px-2 m-2 rounded" style="font-size: 0.75rem;">
-                                {{ $product->category->name }}
-                            </span>
-                        @endif
 
-                        {{-- NOTE: Assuming product images are in 'public/uploads/products/' --}}
-                        <img src="{{ $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0] }}" alt="{{ $product->name }}" class="img-fluid">
-                    </div>
-                </a>
+            @foreach($categoryListNew as $categoryListNews)
+            <?php  
+
+            $getProductInfo = \App\Models\Product::where('category_id',$categoryListNews->id)->orderBy('id','desc')->first();
+
+
+?>
+@if($getProductInfo)
+          <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl">
+            <div class="product-item">
+              <img src="{{ $front_ins_url . 'public/uploads/' . $getProductInfo->main_image[0] }}" alt="{{ $getProductInfo->name }}" class="img-fluid">
             </div>
+          </div>
+          @endif
           @endforeach
-
-          {{-- Keep the static "See All" button --}}
+         
           <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl">
             <div class="see-all-item">
-              <a href="{{ route('shop.show') }}" class="see-all-content">
+              <div class="see-all-content">
+                     <a href="{{ route('shop.show') }}" class="see-all-content">
                 <div class="see-all-icon-rounded">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2"
@@ -44,7 +42,8 @@ Home
                   </svg>
                 </div>
                 <span>See All</span>
-              </a>
+                     </a>
+              </div>
             </div>
           </div>
         </div>
@@ -54,7 +53,7 @@ Home
 
     </div>
 
-    <!-- you might-need -->
+  
    
 
 
@@ -104,9 +103,10 @@ Home
 
   </div>
 </section>
+@if($offerProducts->isNotEmpty())
 <div class="container-fluid">
     <div class="p-md-5 product-details-area rounded">
-    @if($offerProducts->isNotEmpty())
+    
         <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-indicators">
                 @foreach($offerProducts as $offer)
@@ -160,22 +160,28 @@ Home
 
                                 <h2 class="product-title mb-3">{{ $offer->product->name }}</h2>
 
-                                <div class="rating-section mb-3">
-                                    <p class="rating-text ms-2 mb-0">Special Offer</p>
-                                </div>
+                                <!-- Rating -->
+                    <div class="rating-section mb-3">
+                      <div class="stars">
+
+                        <i class="fas fa-star-half-alt text-warning"></i>
+                      </div>
+                      <p class="rating-text ms-2 mb-0">4.5 Rating <span>(120 Review)</span></p>
+                    </div>
 
                                 <div class="price-section mb-4">
                                     <span class="current-price"><img src="{{ asset('public/front/assets/img/taka-icon.png') }}" alt="taka"> {{ number_format($offer->discount_price, 2) }}</span>
                                     <del class="text-muted fs-5 ms-2">৳ {{ number_format($offer->product->base_price, 2) }}</del>
                                 </div>
+                                
                                 <div class="divider"></div>
 
                                 <div class="action-buttons my-4">
-                                    <a href="#" class="btn btn-add-to-cart me-3">
+                                    <a href="{{ route('product.show', $product->slug) }}" class="btn btn-add-to-cart me-3">
                                         <i class="fas fa-shopping-cart me-2"></i>
                                         View Details
                                     </a>
-                                    <a href="#" class="btn btn-buy-now">
+                                    <a href="{{ route('product.show', $product->slug) }}" class="btn btn-buy-now">
                                         BUY NOW
                                     </a>
                                 </div>
@@ -185,6 +191,18 @@ Home
                                         <span class="info-label">SKU:</span>
                                         <span class="info-value">{{ $offer->product->product_code }}</span>
                                     </div>
+
+                                    <?php  
+
+                                     $getProductInfoCount = \App\Models\OrderDetail::where('product_id',$offer->product->id)
+                                     ->whereDate('created_at', '>=', \Carbon\Carbon::now()->subDays(2))
+                                     ->sum('quantity');
+
+                                    ?>
+                                    <div class="stock-info mb-4">
+                        <i class="fas fa-fire text-danger me-2"></i>
+                        <span class="stock-text">{{$getProductInfoCount}} Sold in last 48 hour</span>
+                      </div>
                                 </div>
                                 <div class="divider"></div>
                                 <div class="categories mb-4">
@@ -203,15 +221,16 @@ Home
                 @endforeach
             </div>
         </div>
-        @endif
+      
     </div>
 </div>
-
+  @endif
     <!-- discount product -->
 
     <!-- discount product -->
+     @if($discountedProducts->isNotEmpty())
     <div class="mt-md-5 pt-5 px-3 px-md-0">
-    @if($discountedProducts->isNotEmpty())
+   
     <div class="row g-4">
         @foreach($discountedProducts as $product)
             @php
@@ -245,7 +264,7 @@ Home
                                 <p class="mb-0 discount-amount">
                                     <span>৳</span> {{ number_format($savedAmount, 0) }}
                                 </p>
-                                <p class="discount-text">Discount on {{ $product->category->name ?? 'selected item' }}.</p>
+                                <p class="discount-text">Enjoy Discount on {{ $product->category->name ?? 'selected item' }}.</p>
                             </div>
                         </div>
                         {{-- Using the product's main image --}}
@@ -255,12 +274,18 @@ Home
             </div>
         @endforeach
     </div>
-    @endif
+   
 </div>
-
+ @endif
 
     <!-- weekly product -->
     <section class="weekly px-md-0 px-3">
+
+      <div class="d-flex justify-content-between align-items-center mb-4 px-md-0 px-3">
+    <h2 class="section-title">Weekly best selling item</h2>
+    <a href="{{ route('shop.show') }}" class="see-more-link">See more <i class="fa-solid fa-arrow-right"></i></a>
+  </div>
+
     @if($tabCategories->isNotEmpty())
     {{-- DYNAMIC TABS --}}
     <ul class="nav nav-pills custom-nav-pills mb-md-5 pb-md-5" id="productTab" role="tablist">
@@ -289,7 +314,7 @@ Home
                                     </div>
                                     <div class="product-card">
                                         {{-- Use Str::limit to shorten the product name --}}
-                                        <h6 class="product-name">{{ Str::limit($product->name, 25) }}</h6>
+                                        <h6 class="product-name">{{ $product->name }}</h6>
                                         <p class="product-price">
                                             @if($product->discount_price)
                                                 ৳ {{ number_format($product->discount_price, 2) }}
@@ -454,10 +479,9 @@ Home
                                 </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <h6 class="fw-bold">Quantity:</h6>
-                                <input type="number" id="modal-quantity" class="form-control" value="1" min="1" style="width: 100px;">
-                            </div>
+                            
+                                <input type="hidden" id="modal-quantity" class="form-control" value="1" min="1" style="width: 100px;">
+                            
                             
                         </div>
                     </div>

@@ -17,7 +17,7 @@ use Illuminate\Validation\Rules\Password as PasswordRule;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
-
+use Illuminate\Support\Facades\Validator; 
 class AuthController extends Controller
 {
 
@@ -73,12 +73,17 @@ class AuthController extends Controller
         //Mail::to($request->email)->send(new OtpMail($otp));
 
 
+        try {
         Mail::send('front.emails.otp', ['otp' => $otp], function($message) use($request){
                 $message->to($request->email);
-                $message->subject('Pick And Drop || Password Reset ');
+                $message->subject('Pick And Drop || Otp ');
             });
 
-        return redirect()->route('otp.verification')->with('email', $request->email);
+           return response()->json(['success' => true, 'message' => 'OTP sent successfully!']);
+        } catch(Exception $e) {
+            \Log::error("Mail sending failed: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Could not send OTP email. Please try again.'], 500);
+        }
     }
 
     public function showOtpForm()
@@ -86,18 +91,22 @@ class AuthController extends Controller
         return view('front.otpcode');
     }
 
-     public function verifyOtp(Request $request)
+      public function verifyOtp(Request $request)
     {
-        $request->validate([
-            'otp' => 'required|numeric',
+        $validator = Validator::make($request->all(), [
+            'otp' => 'required|numeric|digits:4',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => 'Please enter a valid 4-digit OTP.'], 422);
+        }
 
         $tempUserData = session('temp_user_data');
         if (!$tempUserData || $tempUserData['otp'] != $request->otp) {
-            return back()->withErrors(['otp' => 'Invalid OTP']);
+            return response()->json(['success' => false, 'message' => 'The provided OTP is invalid.'], 400);
         }
 
-        // 1. Create the User first to get a user ID
+        // --- Database operations ---
         $user = User::create([
             'name' => $tempUserData['name'],
             'email' => $tempUserData['email'],
@@ -108,7 +117,6 @@ class AuthController extends Controller
             'user_type' => 2,
         ]);
 
-        // 2. Create the Customer and associate the user_id
         $customer = Customer::create([
             'name' => $tempUserData['name'],
             'email' => $tempUserData['email'],
@@ -116,16 +124,14 @@ class AuthController extends Controller
             'status' => 1,
             'type' => 'normal',
             'address' => $tempUserData['address'],
-            'password' => $tempUserData['password'], // Accessor in Customer model will hash this
+            'password' => $tempUserData['password'],
             'slug' => Str::slug($tempUserData['name']),
-            'user_id' => $user->id, // Storing user_id in customers table
+            'user_id' => $user->id,
         ]);
 
-        // 3. Update the User with the customer_id
-         $user->customer_id = $customer->id;
-         $user->save();
+        $user->customer_id = $customer->id;
+        $user->save();
 
-         // **FIX**: Create the default addresses in the customer_addresses table
         CustomerAddress::create([
             'customer_id' => $customer->id,
             'address' => $tempUserData['address'],
@@ -140,14 +146,10 @@ class AuthController extends Controller
             'is_default' => 1,
         ]);
 
-
-        // Clear session data
         session()->forget('temp_user_data');
-
-        // Log the user in
         Auth::login($user);
 
-        return redirect()->route('dashboard.user');
+        return response()->json(['success' => true, 'redirect_url' => route('dashboard.user')]);
     }
 
     public function showLoginForm()
@@ -229,10 +231,13 @@ class AuthController extends Controller
                 'created_at' => Carbon::now()
             ]
         );
-
+$otp = random_int(1000, 9999);
         try {
-            Mail::to($request->email)->send(new PasswordResetMail($token, $request->email));
-            return back()->with('status', 'We have emailed your password reset link!');
+            Mail::send('front.emails.otp', ['otp' => $otp], function($message) use($request){
+                $message->to($request->email);
+                $message->subject('Pick And Drop || password reset Otp ');
+            });
+            return back()->with('status', 'We have emailed  password reset otp!');
         } catch (Exception $e) {
             \Log::error("Password reset mail failed: " . $e->getMessage());
             return back()->withErrors(['email' => 'Could not send password reset email.']);

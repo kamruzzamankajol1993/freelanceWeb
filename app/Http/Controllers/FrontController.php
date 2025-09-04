@@ -16,6 +16,9 @@ class FrontController extends Controller
 {
        public function index(){
 
+
+        $categoryListNew = Category::limit(6)->get();
+
         $sliders = MainSlider::where('status', 1)->latest()->get();
 
         $showcaseProducts = Product::with('category')
@@ -24,7 +27,7 @@ class FrontController extends Controller
                                 ->limit(6)
                                 ->get();
 
-        $latestProducts = Product::where('status', 1)->latest()->limit(6)->get();
+        $latestProducts = Product::where('status', 1)->latest()->limit(24)->get();
 
         $today = Carbon::now();
         $offerProducts = OfferProduct::with('product.category')
@@ -51,7 +54,7 @@ class FrontController extends Controller
             ->with(['products' => function ($query) {
                 $query->where('status', 1)->latest()->take(12);
             }])
-            ->take(5)
+           // ->take(5)
             ->get();
 
                     $offerBanners = OfferBanner::where('status', 1)->get()->keyBy('banner_type');
@@ -59,6 +62,7 @@ class FrontController extends Controller
         // Pass all data to the view
         return view('front.index', compact(
             'sliders', 
+            'categoryListNew',
             'showcaseProducts', 
             'latestProducts', 
             'offerProducts',

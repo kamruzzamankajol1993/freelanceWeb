@@ -9,7 +9,7 @@
     <div class="container">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="page-hero-title">{{ $category->name }}</h2>
+                <h2 class="page-hero-title">Quick Picks</h2>
                 <div class="page-hero-nav-links bg-white rounded">
                     <a href="{{ route('home.index') }}">Home</a> - <span class="fw-bold">{{ $category->name }}</span>
                 </div>

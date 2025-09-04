@@ -127,7 +127,7 @@ function buyNow() {
 function initializeAnimations() {
   // Add click events to buttons
   const buyNowBtn = document.querySelector(".btn-buy-now");
-  if (buyNowBtn) buyNowBtn.addEventListener("click", buyNow);
+  
 
   // Add hover effects to product images
   const mainImage = document.getElementById("mainImage");

@@ -25,9 +25,32 @@
         <div class="row">
           <div class="col-md-12">
             <div class="pick-checkout-container">
-              <div class="d-md-flex align-items-center justify-content-between px-md-0 px-3">
-                <h4>Secure Checkout</h4>
-                {{-- Static for now --}}
+             
+                 <!-- Progress Steps -->
+            <div class="d-md-flex align-items-center justify-content-between px-md-0 px-3">
+              <h4>Secure Checkout</h4>
+              <div class="pick-checkout-progress-steps">
+                <div class="pick-checkout-step completed">
+                  <div class="pick-checkout-step-number"><img src="{{asset('/')}}public/front/assets/img/tick.png" alt=""></div>
+                  <span>Basket</span>
+                </div>
+                <div class="step-divider d-lg-block d-none"></div>
+                <div class="pick-checkout-step completed">
+                  <div class="pick-checkout-step-number"><img src="{{asset('/')}}public/front/assets/img/tick.png" alt=""></div>
+                  <span>Review</span>
+                </div>
+                <div class="step-divider d-lg-block d-none"></div>
+                <div class="pick-checkout-step active">
+                  <div class="pick-checkout-step-number">3</div>
+                  <span>Secure Checkout</span>
+                </div>
+                <div class="step-divider d-lg-block d-none"></div>
+                <div class="pick-checkout-step">
+                  <div class="pick-checkout-step-number">4</div>
+                  <span>Confirm</span>
+                </div>
+              </div>
+            </div>
               </div>
 
               @if ($errors->any())
@@ -44,12 +67,17 @@
                 <div class="col-lg-6">
                   <div class="pick-checkout-shipping-section">
                     <h4 class="pick-checkout-section-title pt-3">Shipping Information</h4>
-                    <div class="pick-checkout-delivery-options">
-                      <div class="pick-checkout-delivery-option active d-flex gap-1 justify-content-center align-items-center">
-                        <img src="{{asset('/')}}public/front/assets/img/trucks.png" alt="">
-                        <div>Delivery</div>
-                      </div>
+                      <div class="pick-checkout-delivery-options">
+                    <div
+                      class="pick-checkout-delivery-option active d-flex gap-1 justify-content-center align-items-center">
+                      <img src="{{asset('/')}}public/front/assets/img/trucks.png" alt="">
+                      <div>Delivery</div>
                     </div>
+                    <div class="pick-checkout-delivery-option d-flex gap-1 justify-content-center align-items-center">
+                      <img src="{{asset('/')}}public/front/assets/img/boxx.png" alt="">
+                      <div>Pick Up</div>
+                    </div>
+                  </div>
                     
                       <div class="row">
                         <div class="col-12 mb-3">
@@ -110,7 +138,7 @@
                     <div class="pick-checkout-product-card">
                       <div class="pick-checkout-product-info">
                         <div class="checkout-img-wrapper">
-                          <img src="{{ asset($item['image']) }}" alt="{{ $item['name'] }}" class="pick-checkout-product-image">
+                          <img src="{{ $front_ins_url . 'public/uploads/'.$item['image'] }}" alt="{{ $item['name'] }}" class="pick-checkout-product-image">
                         </div>
                         <div class="pick-checkout-product-details">
                           <h6>{{ $item['name'] }}</h6>
@@ -187,7 +215,7 @@
 
                       <div class="d-flex justify-content-center">
                         <button type="submit" class="pick-checkout-pay-now-btn">
-                          Place Order - <span id="pay-now-total">৳{{ number_format($total, 2) }}</span>
+                          Pay Now - <span id="pay-now-total">৳{{ number_format($total, 2) }}</span>
                         </button>
                       </div>
                     </div>
@@ -203,6 +231,15 @@
 
 @section('script')
 <script>
+
+  // Delivery option toggle
+    document.querySelectorAll('.pick-checkout-delivery-option').forEach(option => {
+      option.addEventListener('click', function () {
+        document.querySelectorAll('.pick-checkout-delivery-option').forEach(opt => opt.classList.remove(
+          'active'));
+        this.classList.add('active');
+      });
+    });
 document.addEventListener('DOMContentLoaded', function () {
     const shippingAreaSelect = document.getElementById('shipping_area');
      const paymentTypeSelect = document.getElementById('payment_type');

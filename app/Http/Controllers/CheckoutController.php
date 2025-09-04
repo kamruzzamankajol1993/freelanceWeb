@@ -154,13 +154,18 @@ class CheckoutController extends Controller
 
         DB::beginTransaction();
         try {
-            $order = Order::create([
+            
+            if($request->payment_type == 'cod'){
+                
+                            $order = Order::create([
                 'customer_id' => Auth::user()->customer_id,
                 'invoice_no' => 'INV-' . time() . rand(10, 99),
                 'subtotal' => $cartData['subtotal'],
                 'shipping_cost' => $cartData['shippingCost'],
                 'discount' => $cartData['discount'],
                 'total_amount' => $cartData['total'],
+                'total_pay' => 0,
+                'cod' => $cartData['total'],
                 'status' => 'pending',
                 'shipping_address' => $request->shipping_address,
                 'billing_address' => $request->billing_address,
@@ -170,7 +175,27 @@ class CheckoutController extends Controller
                 'payment_status' => 'unpaid',
                 'notes' => $request->note,
             ]);
-
+                
+            }else{
+            $order = Order::create([
+                'customer_id' => Auth::user()->customer_id,
+                'invoice_no' => 'INV-' . time() . rand(10, 99),
+                'subtotal' => $cartData['subtotal'],
+                'shipping_cost' => $cartData['shippingCost'],
+                'discount' => $cartData['discount'],
+                'total_amount' => $cartData['total'],
+                'total_pay' => $cartData['total'],
+                'cod' => 0,
+                'status' => 'pending',
+                'shipping_address' => $request->shipping_address,
+                'billing_address' => $request->billing_address,
+                'payment_method' => $request->payment_type,
+                'payment_phone' => $request->payment_phone,
+                'trxID' => $request->payment_trxid,
+                'payment_status' => 'paid',
+                'notes' => $request->note,
+            ]);
+}
             foreach($cartData['cartItems'] as $item) {
                 OrderDetail::create([
                     'order_id' => $order->id,

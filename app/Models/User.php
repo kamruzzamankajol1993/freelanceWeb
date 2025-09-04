@@ -32,6 +32,8 @@ class User extends Authenticatable
         'user_type',
         'password',
         'viewpassword',
+        'password_reset_otp',
+        'password_reset_otp_expires_at',
     ];
 
     /**

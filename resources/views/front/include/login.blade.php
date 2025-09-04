@@ -14,7 +14,12 @@
           <img src="{{ isset($front_ins_url) && isset($front_icon_name) ? $front_ins_url . $front_icon_name : '' }}" alt="Logo" class="logo-img mb-md-3 mb-2">
           <h2 class="modal-title fs-4 fw-bold" id="loginModalLabel">Hello Again! Please Log In</h2>
         </div>
-
+  <div class="d-flex justify-content-between mb-md-4 account-selection">
+              <button type="button" class="btn btn-outline-primary account-btn active" data-account="customer">Customer
+                Account</button>
+              <button type="button" class="btn btn-outline-secondary account-btn" data-account="seller">Seller
+                Account</button>
+            </div>
         <form method="POST" action="{{ route('login') }}">
             @csrf
           <div class="mb-md-3 mb-2 text-start">
@@ -45,7 +50,8 @@
           <div class="login-useful-link">
             <p class="mb-2">Don't have an account? <a href="#" class="text-decoration-none fw-bold community-link"
                 data-bs-toggle="modal" data-bs-target="#staticBackdrop">Join the Community</a></p>
-
+ <p>Become a seller? <a href="#" class="text-decoration-none fw-bold seller-link">Join Our Seller
+                    Network</a></p>
           </div>
         </form>
       </div>

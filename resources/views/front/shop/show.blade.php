@@ -8,9 +8,9 @@
     <div class="container">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="page-hero-title">Our Shop</h2>
+                <h2 class="page-hero-title">Quick Picks</h2>
                 <div class="page-hero-nav-links bg-white rounded">
-                    <a href="{{ route('home.index') }}">Home</a> - <span class="fw-bold">All Products</span>
+                    <a href="{{ route('home.index') }}">Home</a> - <span class="fw-bold">Products</span>
                 </div>
             </div>
         </div>
@@ -66,10 +66,9 @@
                                 </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <h6 class="fw-bold">Quantity:</h6>
-                                <input type="number" id="modal-quantity" class="form-control" value="1" min="1" style="width: 100px;">
-                            </div>
+                           
+                                <input type="hidden" id="modal-quantity" class="form-control" value="1" min="1" style="width: 100px;">
+                            
                             
                         </div>
                     </div>

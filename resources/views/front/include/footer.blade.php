@@ -9,7 +9,7 @@
             </a>
           </div>
           <p class="footer-description justify-center pe-md-4">
-            Premier Web Retail  is a fast-growing e-commerce marketplace specializing in trendy fashion, beauty essentials, and
+            Pick N Drop  is a fast-growing e-commerce marketplace specializing in trendy fashion, beauty essentials, and
             lifestyle accessories. We deliver style and convenience right to your doorstep with a pink-tinted
             flair—bold,
             fun, and full of personality.
@@ -45,7 +45,7 @@
         <div class="col-lg-2 col-md-6 col-6" style="margin-left: -24px;">
           <h6 class="footer-title">About Us</h6>
           <ul class="footer-links">
-            <li><a href="#">About Premier Web Retail </a></li>
+            <li><a href="#">About Pick N Drop </a></li>
             <li><a href="#">Careers</a></li>
             <li><a href="#">News & Blog</a></li>
             <li><a href="#">Terms of Use</a></li>

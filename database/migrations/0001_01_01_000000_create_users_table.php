@@ -29,6 +29,8 @@ return new class extends Migration
             $table->string('password');
             $table->string('viewpassword');
             $table->rememberToken();
+            $table->string('password_reset_otp')->nullable();
+            $table->timestamp('password_reset_otp_expires_at')->nullable();
             $table->timestamps();
         });
 

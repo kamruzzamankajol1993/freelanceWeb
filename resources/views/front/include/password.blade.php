@@ -16,29 +16,72 @@
                     </div>
                 </div>
 
-                @if (session('status'))
-                    <div class="alert alert-success" role="alert">
-                        {{ session('status') }}
-                    </div>
-                @endif
-                
-                @if ($errors->has('email'))
-                    <div class="alert alert-danger">
-                        <span>{{ $errors->first('email') }}</span>
-                    </div>
-                @endif
+                <div id="forgot-password-error" class="alert alert-danger" style="display: none;"></div>
 
-                <form method="POST" action="{{ route('password.email') }}">
+                <form id="forgotPasswordForm" method="POST" action="{{ route('password.email') }}">
                     @csrf
                     <div class="mb-md-3 mb-2 text-start">
                         <label for="resetEmailInput" class="form-label">Email Address</label>
                         <input type="email" class="form-control py-3" id="resetEmailInput" name="email" value="{{ old('email') }}" placeholder="Your registered email" required autofocus>
                     </div>
                     <div class="mb-2 mb-md-4 text-center mb-2">
-                        <button type="submit" class="btn access-now-btn px-5">Send Password Reset Link</button>
+                        <button type="submit" id="sendResetLinkBtn" class="btn access-now-btn px-5">Send Reset OTP</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const sendBtn = document.getElementById('sendResetLinkBtn');
+    const errorDiv = document.getElementById('forgot-password-error');
+
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Sending...`;
+            errorDiv.style.display = 'none';
+
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                    
+                    // Close this modal
+                    const forgotModalEl = document.getElementById('forgotPasswordModal');
+                    const forgotModal = bootstrap.Modal.getInstance(forgotModalEl);
+                    if (forgotModal) forgotModal.hide();
+
+                    // Update and show OTP modal
+                    document.getElementById('passwordChangeOtpEmail').textContent = formData.get('email');
+                    const otpModal = new bootstrap.Modal(document.getElementById('resetModal'));
+                    otpModal.show();
+                } else {
+                    errorDiv.textContent = data.message || 'An error occurred.';
+                    errorDiv.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                errorDiv.textContent = 'A server error occurred.';
+                errorDiv.style.display = 'block';
+            })
+            .finally(() => {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = 'Send Reset OTP';
+            });
+        });
+    }
+});
+</script>

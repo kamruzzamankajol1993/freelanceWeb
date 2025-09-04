@@ -37,7 +37,7 @@
     <div class="container">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="page-hero-title">{{ $product->name }}</h2>
+                <h2 class="page-hero-title">Picked Just for You</h2>
                 <div class="page-hero-nav-links bg-white rounded">
                     <a href="{{ route('home.index') }}">Home</a> - <a class="fw-bold" href="#">View Product</a>
                 </div>
@@ -101,17 +101,16 @@
                     <div class="divider"></div>
 
                      <div class="my-3">
-                        <div class="d-flex align-items-center mb-3">
-                            <h6 class="mb-0 me-3 fw-bold">Quantity:</h6>
-                            <input type="number" id="quantity" class="form-control" value="1" min="1" style="width: 80px;">
-                        </div>
+                       
+                            <input type="hidden" id="quantity" class="form-control" value="1" min="1" style="width: 80px;">
+                      
                         
                         <div class="action-buttons d-flex">
                             <button class="btn btn-add-to-cart flex-grow-1 me-2" id="addToCartBtn" data-product-id="{{ $product->id }}">
                                 <i class="fas fa-shopping-cart me-2"></i>
                                 Add to basket
                             </button>
-                            <button class="btn btn-buy-now flex-grow-1 ms-2">
+                            <button class="btn btn-buy-now flex-grow-1 ms-2" id="buyNowBtn" data-product-id="{{ $product->id }}">
                                 BUY NOW
                             </button>
                         </div>
@@ -124,12 +123,17 @@
                             <span class="info-label">SKU:</span>
                             <span class="info-value" id="productSku">{{ $product->product_code }}</span>
                         </div>
-                        @if($product->brand)
-                        <div class="info-row mb-2">
-                            <span class="info-label">Brand:</span>
-                            <span class="info-value">{{ $product->brand->name }}</span>
-                        </div>
-                        @endif
+                        <?php  
+
+                                     $getProductInfoCount = \App\Models\OrderDetail::where('product_id',$product->id)
+                                     ->whereDate('created_at', '>=', \Carbon\Carbon::now()->subDays(2))
+                                     ->sum('quantity');
+
+                                    ?>
+                                    <div class="stock-info mb-4">
+                        <i class="fas fa-fire text-danger me-2"></i>
+                        <span class="stock-text">{{$getProductInfoCount}} Sold in last 48 hour</span>
+                      </div>
                     </div>
                     <div class="divider"></div>
                     <div class="categories mb-3">
@@ -214,6 +218,17 @@
 
 @section('script')
 <script>
+    function updateCartCounter() {
+        fetch('{{ route('cart.content') }}')
+            .then(response => response.json())
+            .then(data => {
+                const cartCountEl = document.getElementById('cart-item-count');
+                if (cartCountEl) {
+                    cartCountEl.textContent = data.totalItems || 0;
+                }
+            })
+            .catch(error => console.error('Error fetching cart count:', error));
+    }
     // Base product price
     const basePrice = {{ $product->discount_price ?? $product->base_price }};
     const takaIconHtml = `<img src="{{ asset('assets/img/taka-icon.png') }}" alt="">`;
@@ -338,5 +353,82 @@
             });
         });
     });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const buyNowBtn = document.getElementById('buyNowBtn');
+
+    if (buyNowBtn) {
+        buyNowBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // --- 1. Get Selected Options (Same logic as Add to Cart) ---
+            const colorSelector = document.getElementById('color-selector');
+            const sizeSelector = document.getElementById('size-selector');
+            const sizeSection = document.getElementById('size-section');
+            const quantityInput = document.getElementById('quantity');
+
+            const selectedColor = colorSelector ? colorSelector.querySelector('.color-circle.active') : null;
+            const selectedSize = sizeSelector ? sizeSelector.querySelector('.size-option.active') : null;
+
+            // --- 2. Validation (Same logic as Add to Cart) ---
+            if (colorSelector && !selectedColor) {
+                toastr.error('Please select a color before buying.');
+                return;
+            }
+            if (sizeSection.style.display !== 'none' && !selectedSize) {
+                toastr.error('Please select a size before buying.');
+                return;
+            }
+
+            // --- 3. Prepare Data for AJAX Request ---
+            const productId = this.dataset.productId;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const data = {
+                product_id: productId,
+                variant_id: selectedColor ? selectedColor.dataset.variantId : null,
+                color_id: selectedColor ? selectedColor.dataset.colorId : null,
+                size_id: selectedSize ? selectedSize.dataset.sizeId : null,
+                quantity: quantityInput.value
+            };
+
+            // --- 4. Send AJAX Request to Add to Cart ---
+            this.disabled = true;
+            this.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Please Wait...`;
+
+            fetch('{{ route('cart.add') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // --- 5. REDIRECT TO CART on success ---
+                    // This is the only action on success. No alerts.
+                    updateCartCounter()
+                    window.location.href = '{{ route('cart.show') }}';
+                } else {
+                    toastr.error(result.message || 'Could not add product to cart.');
+                    // Re-enable the button on failure
+                    this.disabled = false;
+                    this.innerHTML = `BUY NOW`;
+                }
+            })
+            .catch(error => {
+                console.error('Buy Now Error:', error);
+                toastr.error('An unexpected error occurred.');
+                // Re-enable the button on failure
+                this.disabled = false;
+                this.innerHTML = `BUY NOW`;
+            });
+        });
+    }
+});
 </script>
 @endsection

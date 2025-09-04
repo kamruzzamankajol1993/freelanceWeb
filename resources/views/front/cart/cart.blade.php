@@ -9,7 +9,7 @@
         <div class="col-12 text-center">
           <h2 class="page-hero-title">Your Quick Picks</h2>
           <div class="page-hero-nav-links bg-white rounded">
-            <a href="{{ route('home.index') }}">Home</a> - <a class="fw-bold" href="#">Shopping Cart</a>
+            <a href="{{ route('home.index') }}">Home</a> - <a class="fw-bold" href="#">Add To Basket</a>
           </div>
         </div>
       </div>
@@ -33,7 +33,7 @@
             </tbody>
         </table>
 
-        <div id="cart-summary" class="d-flex justify-content-between align-items-center mt-4">
+        <div id="cart-summary" class="d-flex justify-content-center align-items-center mt-4">
             </div>
       </div>
     </div>
@@ -48,9 +48,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     // Main function to fetch and render the entire cart
+     // Main function to fetch and render the entire cart
      function renderCart() {
-        const publicurl = '{{ $front_ins_url . 'public/uploads/' }}';
-        const publicCheckout = '{{route('checkOutPage')}}';
+        // Use Blade directives to check auth status and get URLs
+        const isLoggedIn = @json(Auth::check());
+        const checkoutUrl = '{{ route('checkOutPage') }}';
+        const publicUrl = "{{ $front_ins_url . 'public/uploads/'}}"; // Simplified asset URL
+
         cartItemsContainer.innerHTML = `<tr><td colspan="5" class="text-center">Loading cart...</td></tr>`;
 
         fetch('{{ route('cart.content') }}')
@@ -63,8 +67,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         const price = parseFloat(item.price);
                         const itemTotal = (price * item.quantity).toFixed(2);
 
-                        // =================== MODIFICATION START ===================
-                        // Check for color and size and build a details string
                         let variantDetails = '';
                         if (item.color_name) {
                             variantDetails += `<small class="d-block text-muted">Color: ${item.color_name}</small>`;
@@ -77,14 +79,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <img src="${publicurl}${item.image}" alt="${item.name}" style="width: 60px; height: 60px; object-fit: cover; margin-right: 15px;">
+                                        <img src="${publicUrl}${item.image}" alt="${item.name}" style="width: 60px; height: 60px; object-fit: cover; margin-right: 15px;">
                                         <div>
                                             <span class="fw-bold">${item.name}</span>
                                             ${variantDetails}
                                         </div>
                                     </div>
                                 </td>
-                        
                                 <td>৳${price.toFixed(2)}</td>
                                 <td>
                                     <div class="input-group" style="width: 120px;">
@@ -104,18 +105,29 @@ document.addEventListener('DOMContentLoaded', function() {
                         cartItemsContainer.innerHTML += row;
                     }
                     
+                    // --- DYNAMIC CHECKOUT BUTTON LOGIC ---
+                    let checkoutButtonHtml = '';
+                    if (isLoggedIn) {
+                        // If user is logged in, link directly to checkout
+                        checkoutButtonHtml = `<a href="${checkoutUrl}" class="btn btn-primary btn-lg hero-btn mt-2">Continue to checkout</a>`;
+                    } else {
+                        // If user is NOT logged in, create a button to open the login modal
+                        checkoutButtonHtml = `
+                            <button type="button" class="btn btn-primary btn-lg hero-btn mt-2" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                Continue to checkout
+                            </button>
+                        `;
+                    }
+
                     cartSummaryContainer.innerHTML = `
-                        <div>
-                            <button class="btn btn-danger" id="clear-cart-btn">Clear Cart</button>
-                        </div>
-                        <div class="text-end">
+                        <div class="text-center">
                             <h4>Subtotal: ৳${data.subtotal.toFixed(2)}</h4>
-                            <a href="${publicCheckout}" class="btn btn-primary btn-lg hero-btn mt-2">Continue to checkout</a>
+                            ${checkoutButtonHtml}
                         </div>
                     `;
 
                 } else {
-                    cartItemsContainer.innerHTML = `<tr><td colspan="5" class="text-center py-5">Your cart is empty.</td></tr>`;
+                    cartItemsContainer.innerHTML = `<tr><td colspan="5" class="text-center py-5">Your cart is empty. <br><br> <a href="{{ route('shop.show') }}" class="btn btn-primary">Go Shopping</a></td></tr>`;
                     cartSummaryContainer.innerHTML = '';
                 }
                 updateCartCounter(); // Update header count

@@ -28,7 +28,7 @@ Route::post('/checkout/update-shipping', 'updateShipping')->name('checkout.shipp
     Route::get('/order-success', 'orderSuccess')->name('order.success');
 });
 
-
+Route::get('/get-order-details/{order}', [AuthController::class, 'getOrderDetails'])->name('order.getDetails');
 
 });
 // Authentication Routes

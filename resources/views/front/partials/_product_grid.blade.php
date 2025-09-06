@@ -8,7 +8,7 @@
                     <img src="{{ $front_ins_url . 'public/uploads/' . $product->thumbnail_image[0] }}" alt="{{ $product->name }}" class="img-fluid">
                 </div>
                 <div class="product-card">
-                    <h6 class="product-name">{{ $product->name, 25 }}</h6>
+                    <h6 class="product-name">{{ $product->name  }}</h6>
                     <p class="product-price">
                         @if($product->discount_price)
                             ৳ {{ number_format($product->discount_price, 2) }}

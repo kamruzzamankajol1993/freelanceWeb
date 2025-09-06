@@ -7,22 +7,25 @@
     <title>Invoice - {{ $order->invoice_no }}</title>
     <style>
         body {
-            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+           font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
             color: #555;
             line-height: 1.5;
             font-size: 14px;
-            /* This sets the background watermark image */
+          
+        }
+        .invoice-box {
+            
+        }
+        .invoice-boxone{
+
+              /* This sets the background watermark image */
             background-image: url("{{ $watermarkPath }}");
             background-repeat: no-repeat;
             background-position: center;
-            background-size: 60%;
+            background-size: 50%;
         }
-        .invoice-box {
-            max-width: 800px;
-            margin: auto;
-            padding: 30px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
-        }
+
+        
         .header { text-align: center; margin-bottom: 40px; }
         .header h1 { color: #333; margin: 0; padding-bottom: 5px; }
         .header img { width: 60px; height: 60px; margin-bottom: 10px; }
@@ -31,17 +34,9 @@
         .details-table td { padding: 5px; vertical-align: top; }
         .from-to { font-size: 14px; }
         .from-to strong { display: block; margin-bottom: 5px; color: #333; }
-        .invoice-details { text-align: right; }
+        .invoice-details { text-align: left; }
         .invoice-details strong { display: block; }
-        .paid-status {
-            float: right;
-            border: 1px solid #28a745;
-            color: #28a745;
-            padding: 3px 10px;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 12px;
-        }
+        
         .items-table { width: 100%; line-height: inherit; text-align: left; border-collapse: collapse; }
         .items-table th { background: #eee; padding: 8px; font-weight: bold; text-align: left; }
         .items-table td { padding: 8px; border-bottom: 1px solid #eee; }
@@ -55,23 +50,49 @@
 <body>
     <div class="invoice-box">
         <div class="header">
-            <img src="{{ public_path('front/assets/img/p-logo.png') }}" alt="Company Logo">
+            <img src="{{asset('/')}}public/front/assets/img/pick-logo.png" alt="Company Logo">
             <h1>Your Purchase Record</h1>
         </div>
 
+    </div>
+    <hr>
+<div class="invoice-boxone">
         <table class="details-table">
-            <tr>
+            <tr style="margin-top: 20px;">
                 <td class="invoice-details">
-                    <h2>Invoice #{{ $order->invoice_no }}</h2>
-                    @if($order->payment_status == 'paid')
-                        <span class="paid-status">Paid</span>
+                    <h4>Invoice #{{ $order->invoice_no }}</h4>
+
+                
+                </td>
+                <td style="text-align: right">
+                      @if($order->payment_status == 'paid')
+                      <div class="paid-status" style=" border: 2px solid #28a745;
+            background: #28a745;
+            color:white;
+             padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 15px;"> <span>Paid</span></div>
+                        @else
+
+                        <div class="unpaid-status" style=" border: 2px solid #dc3545;
+            background: #dc3545;
+            color:white;
+             padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 15px;"> <span>Unpaid</span></div>
+
                     @endif
-                    <br>
-                    <strong>Issued On:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('F d, Y') }}<br>
-                    <strong>Due On:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('F d, Y') }}
                 </td>
             </tr>
-            <tr>
+            <tr style="margin-top: 20px;">
+                <td style="text-align: left;">  <strong>Issued On:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('F d, Y') }}</td>  
+                 <td style="text-align: right;">    
+                  
+                    <strong>Due On:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('F d, Y') }}</td>    
+            </tr>
+            <tr style="margin-top: 20px;">
                 <td class="from-to">
                     <strong>From</strong>
                     Pick N Drop<br>
@@ -105,8 +126,8 @@
                         @if($item->size) <small>(Size: {{ $item->size }})</small> @endif
                     </td>
                     <td style="text-align: center;">{{ $item->quantity }}</td>
-                    <td style="text-align: right;">৳{{ number_format($item->unit_price, 2) }}</td>
-                    <td style="text-align: right;">৳{{ number_format($item->subtotal, 2) }}</td>
+                    <td style="text-align: right;">{{ number_format($item->unit_price, 2) }}</td>
+                    <td style="text-align: right;">{{ number_format($item->subtotal, 2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -120,24 +141,29 @@
                     <table style="width: 100%;">
                         <tr>
                             <td>Subtotal</td>
-                            <td>৳{{ number_format($order->subtotal, 2) }}</td>
+                            <td>{{ number_format($order->subtotal, 2) }}</td>
                         </tr>
                         <tr>
                             <td>Discount</td>
-                            <td>৳{{ number_format($order->discount, 2) }}</td>
+                            <td>{{ number_format($order->discount, 2) }}</td>
                         </tr>
                         <tr>
+                    <td>Shipping Cost</td>
+                    <td>{{ number_format($order->shipping_cost, 2) }}</td>
+                </tr>
+                        <tr>
                             <td><strong>Total</strong></td>
-                            <td class="total"><strong>৳{{ number_format($order->total_amount, 2) }}</strong></td>
+                            <td class="total"><strong>{{ number_format($order->total_amount, 2) }}</strong></td>
                         </tr>
                         <tr>
                             <td><strong>Amount Due</strong></td>
-                            <td><strong>৳{{ number_format($order->total_amount, 2) }}</strong></td>
+                            <td><strong>{{ number_format($order->total_amount, 2) }}</strong></td>
                         </tr>
                     </table>
                 </td>
             </tr>
         </table>
-    </div>
+</div>
+   
 </body>
 </html>

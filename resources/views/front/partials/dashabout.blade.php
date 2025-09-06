@@ -62,6 +62,7 @@
                                             <th>Price</th>
                                             <th>Item Qty.</th>
                                             <th>Order Status</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -73,6 +74,17 @@
                                             <td>৳ {{ number_format($order->total_amount, 2) }}</td>
                                             <td>{{ $order->order_details_count }}</td>
                                             <td><span class="profile-badge info-bg">{{ ucfirst($order->status) }}</span></td>
+                                            <td>
+
+                                                <a href="{{ url('/invoice/'.$order->id.'/print') }}" target="_blank" class="me-2">
+                                                  <span>
+                                <img src="{{asset('/')}}public/front/assets/img/pdf.png" alt="">
+                              </span>
+                                                </a>
+                                                <a href="#" class="me-2 view-order-btn" data-bs-toggle="modal" data-bs-target="#orderDetailModal" data-order-id="{{ $order->id }}" title="View Details">
+                                                    <span><img src="{{asset('/')}}public/front/assets/img/eye.png" alt="View"></span>
+                                                </a>
+                                            </td>
                                         </tr>
                                         @empty
                                         <tr>
@@ -109,7 +121,16 @@
                                             <td>৳ {{ number_format($order->total_amount, 2) }}</td>
                                             <td>{{ $order->order_details_count }}</td>
                                             <td><span class="profile-badge warning-bg">{{ ucfirst($order->status) }}</span></td>
-                                            <td></td>
+                                            <td>
+                                               <a href="{{ url('/invoice/'.$order->id.'/print') }}" target="_blank" class="me-2">
+                                                  <span>
+                                <img src="{{asset('/')}}public/front/assets/img/pdf.png" alt="">
+                              </span>
+                                                </a>
+                                                <a href="#" class="me-2 view-order-btn" data-bs-toggle="modal" data-bs-target="#orderDetailModal" data-order-id="{{ $order->id }}" title="View Details">
+                                                    <span><img src="{{asset('/')}}public/front/assets/img/eye.png" alt="View"></span>
+                                                </a>
+                                            </td>
                                         </tr>
                                         @empty
                                         <tr>

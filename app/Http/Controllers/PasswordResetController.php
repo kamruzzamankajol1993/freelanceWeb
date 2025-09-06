@@ -35,9 +35,9 @@ class PasswordResetController extends Controller
 
         try {
             // --- THIS SECTION HAS BEEN UPDATED AS PER YOUR REQUEST ---
-            Mail::send('front.emails.otp', ['otp' => $otp], function($message) use($request){
+            Mail::send('front.emails.password_reset', ['otp' => $otp,'name' => $user->name], function($message) use($request){
                 $message->to($request->email);
-                $message->subject('Pick And Drop || password reset Otp ');
+                $message->subject('Pick N Drop - Password Reset Request');
             });
             // --- END OF UPDATE ---
             

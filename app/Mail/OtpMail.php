@@ -14,15 +14,17 @@ class OtpMail extends Mailable
     use Queueable, SerializesModels;
 
     public $otp;
+    public $name;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($otp)
+    public function __construct($otp, $name)
     {
         $this->otp = $otp;
+        $this->name = $name;
     }
 
     /**
@@ -33,7 +35,7 @@ class OtpMail extends Mailable
     public function envelope()
     {
         return new Envelope(
-            subject: 'Your OTP Code',
+            subject: 'Pick N Drop - Verify Your Account With OTP',
         );
     }
 

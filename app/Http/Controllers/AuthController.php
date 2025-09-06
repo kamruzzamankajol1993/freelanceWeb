@@ -20,6 +20,19 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator; 
 class AuthController extends Controller
 {
+    public function getOrderDetails(Order $order)
+    {
+        // Security check: Ensure the authenticated user owns the order
+        if (Auth::user()->customer_id !== $order->customer_id) {
+            return response()->view('front.partials.modal_error', [], 403);
+        }
+
+        // Eager load relationships for efficiency
+        $order->load('orderDetails.product', 'customer');
+
+        // Return a partial view with the order data
+        return view('front.partials.order_details_modal_content', compact('order'));
+    }
 
     public function resendOtp(Request $request)
     {
@@ -33,7 +46,7 @@ class AuthController extends Controller
         $tempUserData['otp'] = $otp; // Update the OTP
 
         try {
-            Mail::to($tempUserData['email'])->send(new OtpMail($otp));
+            Mail::to($tempUserData['email'])->send(new OtpMail($otp,$tempUserData['name']));
             session(['temp_user_data' => $tempUserData]); // Resave the session data with the new OTP
             return response()->json(['message' => 'A new OTP has been sent to your email address.']);
         } catch (Exception $e) {
@@ -73,10 +86,12 @@ class AuthController extends Controller
         //Mail::to($request->email)->send(new OtpMail($otp));
 
 
+
+
         try {
-        Mail::send('front.emails.otp', ['otp' => $otp], function($message) use($request){
+        Mail::send('front.emails.otp', ['otp' => $otp,'name' => $request->name], function($message) use($request){
                 $message->to($request->email);
-                $message->subject('Pick And Drop || Otp ');
+                $message->subject('Pick N Drop - Verify Your Account With OTP');
             });
 
            return response()->json(['success' => true, 'message' => 'OTP sent successfully!']);

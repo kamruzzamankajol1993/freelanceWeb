@@ -348,75 +348,37 @@ Home
     @endif
 </section>
 
-
+@if(isset($offerBanners['1st']))
     <!-- fast delivery -->
     <div class="section px-md-0 px-3">
       <div class="delivery-section ">
         <!-- Logo -->
-        <div class="logo-2">
-          <img src="{{$front_ins_url}}{{$front_black_logo_name}}" alt="Premier Web Retail Logo">
-        </div>
-
-        <!-- Main Content -->
-        <div class="main-content">
-          <div class="hero-text">
-            <h2>Stay Home and Get All Your Essentials Form Our Market!</h2>
-          </div>
-        </div>
-
-        <!-- Delivery Man -->
-        @if(isset($offerBanners['1st']))
-        <div class="delivery-man">
+  
           <img src="{{ $front_ins_url . $offerBanners['1st']->image }}" alt="Delivery Man">
-        </div>
-        @endif
+    
+       
       </div>
     </div>
-
+ @endif
     <!-- delivery and coupon -->
-
+ @if(isset($offerBanners['3rd']) && isset($offerBanners['2nd']))
     <section class="delivery-coupon py-lg-0 py-5 px-md-0 px-3">
       <div class="row g-4">
         <div class="col-lg-6 col-12">
-          <div class="delivery-card">
-            <div class="content-wrapper">
-              <div class="delivery-badge card-badge">
-                Free delivery
-              </div>
-              <h4 class="main-heading">
-                Get up to 50% off <br>
-                Delivery by 10:15am <br>
-                Fast and free
-              </h4>
-
-            </div>
-              @if(isset($offerBanners['2nd']))
-            <img src="{{ $front_ins_url . $offerBanners['2nd']->image }}" alt="Delivery cyclist" class="cyclist-image card-img">
-            @endif
+          <div class="delivery-card" style="background-image: url({{ $front_ins_url . $offerBanners['2nd']->image }}) !important;">
+           
           </div>
         </div>
         <div class="col-lg-6 col-12">
-          <div class="delivery-card coupon-card">
-            <div class="content-wrapper">
-              <div class="coupon-badge card-badge">
-                Free delivery
-              </div>
-              <h4 class="main-heading coupon-heading">
-                Get up to 50% off <br>
-                Delivery by 10:15am <br>
-                Fast and free
-              </h4>
-
-            </div>
-            @if(isset($offerBanners['3rd']))
-            <img src="{{ $front_ins_url . $offerBanners['3rd']->image }}" alt="Delivery cyclist" class="card-img coupon-img">
-            @endif
+          <div class="delivery-card coupon-card" style="background-image: url({{ $front_ins_url . $offerBanners['3rd']->image }}) !important;">
+           
           </div>
         </div>
       </div>
 
     </section>
-
+    @endif
+ @if(isset($offerBanners['4th']))
     <!-- customer service -->
     <div class="px-md-0 px-3">
       <section class="customer-service-section mt-md-5 mb-5">
@@ -424,30 +386,17 @@ Home
           <div class="customer-service-background"></div>
           <div class="wrapper pb-0">
             <div class="row align-items-center">
-              <div class="col-lg-6 col-md-6 col-12">
-                <div class="customer-service-content">
-                  <div class="support-time d-lg-block d-none">
-                    <img src="{{asset('/')}}public/front/assets/img/7.png" alt=""></div>
-                  <h2 class="customer-service-title">Emergency Service Open</h2>
-                  <!-- <a href="tel:+8801611416065" class="customer-service-phone">+8801843369439</a> -->
-                  <p class="mb-0 customer-service-phone">+8801600000000</p>
-                </div>
-              </div>
-              <div class="col-lg-6 col-md-6 col-12">
-                <div class="customer-service-image-wrapper">
-                  <div class="angel position-absolute d-lg-block d-none">
-                    <img src="{{asset('/')}}public/front/assets/img/angel.png" alt="">
-                  </div>
-                   @if(isset($offerBanners['4th']))
+              <div class="col-md-12">
+                  
                   <img src="{{ $front_ins_url . $offerBanners['4th']->image }}" alt="Customer Service Representative" class="customer-service-image">
-                  @endif
-                </div>
+                 
               </div>
-            </div>
+                
           </div>
         </div>
       </section>
     </div>
+     @endif
      <div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -611,7 +560,7 @@ Home
         }
 
         // 3. Handle color selection change
-        $(document).on('change', 'input[name="color_option"]', function() {
+         $(document).on('change', 'input[name="color_option"]', function() {
             const selectedColorId = $(this).val();
             const variant = modalProductData.variants.find(v => v.color_id == selectedColorId);
 
@@ -619,18 +568,50 @@ Home
             if (variant && variant.detailed_sizes && variant.detailed_sizes.length > 0) {
                 let sizeOptionsHtml = '';
                 variant.detailed_sizes.forEach((size, index) => {
+                    // **MODIFIED LINE**: Add data-price to the size radio button
                     sizeOptionsHtml += `
                        <div class="form-check">
-                           <input class="form-check-input" type="radio" name="size_option" id="size_${size.id}" value="${size.id}" ${index === 0 ? 'checked' : ''}>
+                           <input class="form-check-input" type="radio" name="size_option" id="size_${size.id}" value="${size.id}" data-price="${size.price || 0}" ${index === 0 ? 'checked' : ''}>
                            <label class="form-check-label" for="size_${size.id}">${size.name}</label>
                        </div>
                     `;
                 });
                  $('#modal-size-options').html(sizeOptionsHtml);
+                 // Trigger change to update the price for the default selected size
+                 $('input[name="size_option"]:checked').trigger('change');
             } else {
                  $('#modal-size-options').html('<p class="text-muted">No sizes available for this color.</p>');
+                 // If no sizes, reset the price to the main product price
+                 updateModalPrice(); 
             }
         });
+
+         // **NEW**: Handle size selection change to update the displayed price
+        $(document).on('change', 'input[name="size_option"]', function() {
+            const sizePrice = parseFloat($(this).data('price')) || 0;
+            updateModalPrice(sizePrice);
+        });
+
+         function updateModalPrice(sizePrice = 0) {
+             let priceHtml = '';
+             let finalPrice;
+
+             if (sizePrice > 0) {
+                 finalPrice = sizePrice;
+             } else {
+                 finalPrice = modalProductData.discount_price || modalProductData.base_price;
+             }
+
+             priceHtml = `৳ ${Number(finalPrice).toFixed(2)}`;
+             
+             // If there was an original discount, show the original base price crossed out
+             if(modalProductData.discount_price){
+                 priceHtml += ` <del class="text-muted ms-2">৳ ${Number(modalProductData.base_price).toFixed(2)}</del>`;
+             }
+
+            $('#modal-product-price').html(priceHtml);
+        }
+
 
         // 4. Handle "Add to Cart" button click inside the modal
         // 4. Handle "Add to Cart" button click inside the modal

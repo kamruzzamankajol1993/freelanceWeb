@@ -36,8 +36,6 @@ class CartController extends Controller
        */
     public function addToCart(Request $request)
     {
-        // --- MODIFICATION START ---
-        // Updated validation to accept both variant_id and color_id
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
@@ -45,52 +43,66 @@ class CartController extends Controller
             'color_id' => 'nullable|exists:colors,id',
             'size_id' => 'nullable|exists:sizes,id',
         ]);
-        // --- MODIFICATION END ---
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
 
         $cart = session()->get('cart', []);
-        
-        // --- MODIFICATION START ---
-        // Updated cart key to be more specific using variant_id
-        $cartKey = $request->product_id . '-' . $request->variant_id . '-' . $request->size_id;
-        // --- MODIFICATION END ---
-
+        $cartKey = $request->product_id . '-' . ($request->variant_id ?? $request->color_id) . '-' . $request->size_id;
         $product = Product::find($request->product_id);
 
         if (isset($cart[$cartKey])) {
             $cart[$cartKey]['quantity'] += (int)$request->quantity;
         } else {
-            // --- MODIFICATION START ---
             $color = $request->color_id ? Color::find($request->color_id) : null;
             $size = $request->size_id ? Size::find($request->size_id) : null;
             $variantImage = null;
-
-            // Find the variant directly by its ID
-            $variant = $request->variant_id ? ProductVariant::find($request->variant_id) : null;
             
-            if ($variant && !empty($variant->variant_image)) {
-                $variantImage = $variant->variant_image[0];
+            // **PRICE LOGIC START**
+            // 1. Set the default/fallback price from the main product table.
+            $price = $product->discount_price ?? $product->base_price; 
+
+            // **MODIFIED VARIANT LOOKUP LOGIC**
+            // Find the variant using product_id and color_id for reliability.
+            $variant = null;
+            if ($request->color_id) {
+                $variant = ProductVariant::where('product_id', $product->id)
+                                           ->where('color_id', $request->color_id)
+                                           ->first();
+            }
+
+            if ($variant) {
+                if (!empty($variant->variant_image)) {
+                    $variantImage = $variant->variant_image[0];
+                }
+                
+                // 2. Check for a size-specific price within the selected variant.
+                if ($request->size_id && is_array($variant->sizes)) {
+                    $sizeData = collect($variant->sizes)->firstWhere('size_id', (int)$request->size_id);
+                    
+                    // 3. If a specific price exists for the size, overwrite the default price.
+                    if ($sizeData && isset($sizeData['price']) && $sizeData['price'] > 0) {
+                        $price = $sizeData['price'];
+                    }
+                }
+                // **PRICE LOGIC END**
             }
 
             $image = $variantImage ?: ($product->main_image[0] ?? '');
 
-            // Store both variant_id and color_id in the cart session
             $cart[$cartKey] = [
                 "product_id" => $product->id,
                 "name" => $product->name,
                 "image" => $image,
                 "quantity" => (int)$request->quantity,
-                "price" => $product->discount_price ?? $product->base_price,
-                "variant_id" => $request->variant_id,
+                "price" => $price, // This is now the correctly determined price.
+                "variant_id" => $variant ? $variant->id : null, // Use the found variant's ID
                 "color_id" => $request->color_id,
                 "color_name" => $color ? $color->name : null,
                 "size_id" => $request->size_id,
                 "size_name" => $size ? $size->name : null,
             ];
-            // --- MODIFICATION END ---
         }
 
         session()->put('cart', $cart);
@@ -101,6 +113,7 @@ class CartController extends Controller
             'cartData' => $this->getCartData()
         ]);
     }
+
 
     /**
      * Get the current cart content.

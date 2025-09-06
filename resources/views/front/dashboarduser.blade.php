@@ -237,11 +237,62 @@ Dashboard
         @include('front.partials.dashedit')
     </div>
 </div>
+<div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="orderDetailModalLabel">Order Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modal-body-content">
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 @endsection
 
 @section('script')
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const orderDetailModal = document.getElementById('orderDetailModal');
+    orderDetailModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const orderId = button.getAttribute('data-order-id');
+        const modalBody = document.getElementById('modal-body-content');
 
+        modalBody.innerHTML = `<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
+
+        // --- MODIFIED LINE ---
+        // Create the URL by replacing a placeholder with the actual orderId
+        const url = "{{ route('order.getDetails', ['order' => ':orderId']) }}".replace(':orderId', orderId);
+
+        // Fetch order details via AJAX using the generated route
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(html => {
+                modalBody.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error fetching order details:', error);
+                modalBody.innerHTML = `<div class="alert alert-danger">Could not load order details. Please try again later.</div>`;
+            });
+    });
+});
+</script>
 {{-- Script for Profile Image Preview --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {

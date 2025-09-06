@@ -1191,7 +1191,7 @@ select:focus {
 }
 
 .delivery-coupon .delivery-card {
-  background-image: url("img/Mask\ group.png");
+  
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

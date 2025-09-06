@@ -216,7 +216,7 @@ $(document).ready(function() {
         }
 
         // 3. Handle color selection change
-        $(document).on('change', 'input[name="color_option"]', function() {
+         $(document).on('change', 'input[name="color_option"]', function() {
             const selectedColorId = $(this).val();
             const variant = modalProductData.variants.find(v => v.color_id == selectedColorId);
 
@@ -224,18 +224,49 @@ $(document).ready(function() {
             if (variant && variant.detailed_sizes && variant.detailed_sizes.length > 0) {
                 let sizeOptionsHtml = '';
                 variant.detailed_sizes.forEach((size, index) => {
+                    // **MODIFIED LINE**: Add data-price to the size radio button
                     sizeOptionsHtml += `
                        <div class="form-check">
-                           <input class="form-check-input" type="radio" name="size_option" id="size_${size.id}" value="${size.id}" ${index === 0 ? 'checked' : ''}>
+                           <input class="form-check-input" type="radio" name="size_option" id="size_${size.id}" value="${size.id}" data-price="${size.price || 0}" ${index === 0 ? 'checked' : ''}>
                            <label class="form-check-label" for="size_${size.id}">${size.name}</label>
                        </div>
                     `;
                 });
                  $('#modal-size-options').html(sizeOptionsHtml);
+                 // Trigger change to update the price for the default selected size
+                 $('input[name="size_option"]:checked').trigger('change');
             } else {
                  $('#modal-size-options').html('<p class="text-muted">No sizes available for this color.</p>');
+                 // If no sizes, reset the price to the main product price
+                 updateModalPrice(); 
             }
         });
+
+         // **NEW**: Handle size selection change to update the displayed price
+        $(document).on('change', 'input[name="size_option"]', function() {
+            const sizePrice = parseFloat($(this).data('price')) || 0;
+            updateModalPrice(sizePrice);
+        });
+
+         function updateModalPrice(sizePrice = 0) {
+             let priceHtml = '';
+             let finalPrice;
+
+             if (sizePrice > 0) {
+                 finalPrice = sizePrice;
+             } else {
+                 finalPrice = modalProductData.discount_price || modalProductData.base_price;
+             }
+
+             priceHtml = `৳ ${Number(finalPrice).toFixed(2)}`;
+             
+             // If there was an original discount, show the original base price crossed out
+             if(modalProductData.discount_price){
+                 priceHtml += ` <del class="text-muted ms-2">৳ ${Number(modalProductData.base_price).toFixed(2)}</del>`;
+             }
+
+            $('#modal-product-price').html(priceHtml);
+        }
 
         // 4. Handle "Add to Cart" button click inside the modal
         // 4. Handle "Add to Cart" button click inside the modal

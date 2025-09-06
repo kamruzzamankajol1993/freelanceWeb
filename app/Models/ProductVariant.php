@@ -53,9 +53,10 @@ class ProductVariant extends Model
             if (isset($sizeEntry['size_id']) && $sizesMasterList->has($sizeEntry['size_id'])) {
                 // === CHANGE #3: Use 'size_id' to look up the name ===
                 $detailedSizes[] = [
-                    'id'       => $sizeEntry['size_id'], // Output 'id' for JS consistency
+                    'id'       => $sizeEntry['size_id'],
                     'name'     => $sizesMasterList[$sizeEntry['size_id']]->name,
                     'quantity' => $sizeEntry['quantity'],
+                    'price'    => $sizeEntry['price'] ?? 0, // Include the size-specific price
                 ];
             }
         }

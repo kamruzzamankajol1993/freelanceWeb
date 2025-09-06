@@ -88,8 +88,9 @@
                     </div>
 
                     <div class="price-section mb-3">
+                        {{-- The content of this span will be updated by JavaScript --}}
                         <span class="current-price" id="productPrice">
-                            <img src="{{ asset('assets/img/taka-icon.png') }}" alt="">
+                            <img src="{{ asset('public/front/assets/img/taka-icon.png') }}" alt="">
                             @if($product->discount_price)
                                 {{ number_format($product->discount_price, 2) }}
                                 <span class="original-price text-decoration-line-through text-muted fs-5 ms-2">{{ number_format($product->base_price, 2) }}</span>
@@ -150,7 +151,7 @@
                         {!! $product->description !!}
                     </div>
 
-                    @if($product->variants->isNotEmpty())
+                     @if($product->variants->isNotEmpty())
                         <div class="row mb-3 align-items-center">
                             <div class="col-auto label-text">Available Color :</div>
                             <div class="col-auto" id="color-selector">
@@ -218,22 +219,12 @@
 
 @section('script')
 <script>
-    function updateCartCounter() {
-        fetch('{{ route('cart.content') }}')
-            .then(response => response.json())
-            .then(data => {
-                const cartCountEl = document.getElementById('cart-item-count');
-                if (cartCountEl) {
-                    cartCountEl.textContent = data.totalItems || 0;
-                }
-            })
-            .catch(error => console.error('Error fetching cart count:', error));
-    }
-    // Base product price
-    const basePrice = {{ $product->discount_price ?? $product->base_price }};
-    const takaIconHtml = `<img src="{{ asset('assets/img/taka-icon.png') }}" alt="">`;
+    // Global variable to store base price for calculations
+    const baseProductPrice = {{ $product->discount_price ?? $product->base_price }};
+    const originalBasePrice = {{ $product->base_price }}; // The non-discounted price
+    const hasDiscount = {{ $product->discount_price ? 'true' : 'false' }};
+    const takaIconHtml = `<img src="{{ asset('public/front/assets/img/taka-icon.png') }}" alt="Taka">`;
 
-    // Function to change the main image from thumbnails
     function changeImage(element, newImageSrc) {
         document.getElementById('mainImage').src = newImageSrc;
         document.querySelectorAll('.thumbnail-container .single-img').forEach(el => el.classList.remove('active'));
@@ -248,10 +239,29 @@
         const productPriceEl = document.getElementById('productPrice');
         const productSkuEl = document.getElementById('productSku');
         const addToCartBtn = document.getElementById('addToCartBtn');
-        const cartMessage = document.getElementById('cartMessage');
-         const quantityInput = document.getElementById('quantity'); 
+        const buyNowBtn = document.getElementById('buyNowBtn');
 
-        if(colorSelector) {
+        // Function to update the displayed price
+        function updatePrice(sizePrice = 0) {
+            let finalPrice;
+            // If a specific price is set for the size, use it. Otherwise, use the product's base price.
+            if (sizePrice > 0) {
+                finalPrice = sizePrice;
+            } else {
+                finalPrice = baseProductPrice;
+            }
+
+            let priceHtml = `${takaIconHtml} ${Number(finalPrice).toFixed(2)}`;
+            
+            // If the main product had a discount, and we are not using a size-specific price, show the original price
+            if (hasDiscount && sizePrice <= 0) {
+                 priceHtml += ` <span class="original-price text-decoration-line-through text-muted fs-5 ms-2">${Number(originalBasePrice).toFixed(2)}</span>`;
+            }
+
+            productPriceEl.innerHTML = priceHtml;
+        }
+
+        if (colorSelector) {
             const colors = colorSelector.querySelectorAll('.color-circle');
             
             colors.forEach(color => {
@@ -260,76 +270,75 @@
                     this.classList.add('active');
                     
                     const newImage = this.dataset.mainImage;
-                    const additionalPrice = parseFloat(this.dataset.additionalPrice);
                     const newSku = this.dataset.variantSku;
                     const sizes = JSON.parse(this.dataset.sizes);
                     
                     mainImage.src = newImage;
-                    const finalPrice = (basePrice + additionalPrice).toFixed(2);
-                    productPriceEl.innerHTML = `${takaIconHtml} ${finalPrice}`;
                     productSkuEl.textContent = newSku;
                     
                     sizeSelector.innerHTML = '';
                     if (sizes.length > 0) {
                         sizes.forEach(size => {
                             const sizeSpan = document.createElement('span');
-                            sizeSpan.classList.add('size-option'); // <-- ADD THIS LINE
+                            sizeSpan.classList.add('size-option');
                             sizeSpan.textContent = size.name;
                             sizeSpan.dataset.sizeId = size.id;
+                            // **CRITICAL FIX**: Add the price to the size element
+                            sizeSpan.dataset.price = size.price || 0;
                             sizeSelector.appendChild(sizeSpan);
                         });
                         sizeSection.style.display = 'flex';
+                        // Reset price to default for the variant when color changes
+                        updatePrice(); 
                     } else {
                         sizeSection.style.display = 'none';
+                        updatePrice();
                     }
                 });
             });
         }
         
-        sizeSelector.addEventListener('click', function(e){
-            if(e.target && e.target.nodeName == "SPAN"){
-                this.querySelectorAll('span').forEach(s => s.classList.remove('active'));
+        // **NEW**: Event listener for when a size is clicked
+        sizeSelector.addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains('size-option')) {
+                this.querySelectorAll('.size-option').forEach(s => s.classList.remove('active'));
                 e.target.classList.add('active');
+
+                // Get the price from the selected size's data attribute and update the display
+                const sizePrice = parseFloat(e.target.dataset.price) || 0;
+                updatePrice(sizePrice);
             }
         });
 
-        // --- ADD TO CART AJAX LOGIC ---
-         addToCartBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-
+        // --- ADD TO CART & BUY NOW LOGIC ---
+        function handleCartAction(isBuyNow = false) {
             const selectedColor = colorSelector ? colorSelector.querySelector('.color-circle.active') : null;
             const selectedSize = sizeSelector ? sizeSelector.querySelector('.size-option.active') : null;
             
-            // Validation
             if (colorSelector && !selectedColor) {
-                toastr.error('Please select a color.');
-                return;
+                toastr.error('Please select a color.'); return;
             }
             if (sizeSection.style.display !== 'none' && !selectedSize) {
-                toastr.error('Please select a size.');
-                return;
+                toastr.error('Please select a size.'); return;
             }
 
-            // Prepare data for AJAX request
-            const productId = this.dataset.productId;
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const button = isBuyNow ? buyNowBtn : addToCartBtn;
+            button.disabled = true;
+            button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+
             const data = {
-                product_id: productId,
+                product_id: button.dataset.productId,
                 variant_id: selectedColor ? selectedColor.dataset.variantId : null,
-                color_id: selectedColor ? selectedColor.dataset.colorId : null, // Added color_id
+                color_id: selectedColor ? selectedColor.dataset.colorId : null,
                 size_id: selectedSize ? selectedSize.dataset.sizeId : null,
-                quantity: quantityInput.value // Added quantity
+                quantity: document.getElementById('quantity').value
             };
 
-            // Send AJAX Request
-            this.disabled = true;
-            this.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Adding...`;
-
-            fetch('{{ route('cart.add') }}', {
+            fetch('{{ route("cart.add") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'Accept': 'application/json'
                 },
                 body: JSON.stringify(data)
@@ -337,10 +346,14 @@
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    toastr.success(result.message); // Use Toastr for success
-                    updateCartCounter(); // Update the header counter
+                    updateCartCounter();
+                    if (isBuyNow) {
+                        window.location.href = '{{ route("cart.show") }}';
+                    } else {
+                        toastr.success(result.message);
+                    }
                 } else {
-                    toastr.error(result.message || 'Could not add product to cart.'); // Use Toastr for error
+                    toastr.error(result.message || 'Could not add product to cart.');
                 }
             })
             .catch(error => {
@@ -348,87 +361,13 @@
                 toastr.error('An unexpected error occurred.');
             })
             .finally(() => {
-                this.disabled = false;
-                this.innerHTML = `<i class="fas fa-shopping-cart me-2"></i> Add to basket`;
+                button.disabled = false;
+                button.innerHTML = isBuyNow ? 'BUY NOW' : `<i class="fas fa-shopping-cart me-2"></i> Add to basket`;
             });
-        });
+        }
+
+        addToCartBtn.addEventListener('click', () => handleCartAction(false));
+        buyNowBtn.addEventListener('click', () => handleCartAction(true));
     });
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const buyNowBtn = document.getElementById('buyNowBtn');
-
-    if (buyNowBtn) {
-        buyNowBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-
-            // --- 1. Get Selected Options (Same logic as Add to Cart) ---
-            const colorSelector = document.getElementById('color-selector');
-            const sizeSelector = document.getElementById('size-selector');
-            const sizeSection = document.getElementById('size-section');
-            const quantityInput = document.getElementById('quantity');
-
-            const selectedColor = colorSelector ? colorSelector.querySelector('.color-circle.active') : null;
-            const selectedSize = sizeSelector ? sizeSelector.querySelector('.size-option.active') : null;
-
-            // --- 2. Validation (Same logic as Add to Cart) ---
-            if (colorSelector && !selectedColor) {
-                toastr.error('Please select a color before buying.');
-                return;
-            }
-            if (sizeSection.style.display !== 'none' && !selectedSize) {
-                toastr.error('Please select a size before buying.');
-                return;
-            }
-
-            // --- 3. Prepare Data for AJAX Request ---
-            const productId = this.dataset.productId;
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const data = {
-                product_id: productId,
-                variant_id: selectedColor ? selectedColor.dataset.variantId : null,
-                color_id: selectedColor ? selectedColor.dataset.colorId : null,
-                size_id: selectedSize ? selectedSize.dataset.sizeId : null,
-                quantity: quantityInput.value
-            };
-
-            // --- 4. Send AJAX Request to Add to Cart ---
-            this.disabled = true;
-            this.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Please Wait...`;
-
-            fetch('{{ route('cart.add') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    // --- 5. REDIRECT TO CART on success ---
-                    // This is the only action on success. No alerts.
-                    updateCartCounter()
-                    window.location.href = '{{ route('cart.show') }}';
-                } else {
-                    toastr.error(result.message || 'Could not add product to cart.');
-                    // Re-enable the button on failure
-                    this.disabled = false;
-                    this.innerHTML = `BUY NOW`;
-                }
-            })
-            .catch(error => {
-                console.error('Buy Now Error:', error);
-                toastr.error('An unexpected error occurred.');
-                // Re-enable the button on failure
-                this.disabled = false;
-                this.innerHTML = `BUY NOW`;
-            });
-        });
-    }
-});
 </script>
 @endsection

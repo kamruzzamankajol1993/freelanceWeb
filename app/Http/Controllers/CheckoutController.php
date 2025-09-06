@@ -47,6 +47,7 @@ class CheckoutController extends Controller
             'mode' => 'utf-8',
             'format' => 'A4',
             
+            
         ]);
 
         // Write HTML content to the PDF

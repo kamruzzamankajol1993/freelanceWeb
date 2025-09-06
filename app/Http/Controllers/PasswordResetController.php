@@ -23,8 +23,10 @@ class PasswordResetController extends Controller
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->where('user_type',1)->where('status',1)->first();
         $otp = random_int(1000, 9999);
+
+        //if($user->use)
 
         // Store OTP and its expiration time on the user record
         $user->password_reset_otp = $otp;
@@ -61,6 +63,8 @@ class PasswordResetController extends Controller
         }
 
         $user = User::where('email', $request->email)
+        ->where('user_type',1)
+        ->where('status',1)
                     ->where('password_reset_otp', $request->otp)
                     ->where('password_reset_otp_expires_at', '>', Carbon::now())
                     ->first();
@@ -98,7 +102,7 @@ class PasswordResetController extends Controller
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
 
-        $user = User::where('email', $email)->firstOrFail();
+        $user = User::where('email', $email)->where('user_type',1)->where('status',1)->firstOrFail();
         
         $user->password = Hash::make($request->password);
         $user->save();

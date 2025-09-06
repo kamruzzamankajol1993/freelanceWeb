@@ -3,10 +3,37 @@
 @section('title', 'Secure Checkout')
 
 @section('css')
+<style>
+    /* Add a visual cue for the selected delivery option */
+    .pick-checkout-delivery-option {
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: border-color 0.2s ease-in-out;
+    }
+    .pick-checkout-delivery-option.active {
+        border-color: #0d6efd; /* Bootstrap primary color */
+    }
+    /* Styles for the new success modal */
+    .success-modal-icon {
+        width: 80px;
+        height: 80px;
+        background-color: #e8f5e9; /* Light green */
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+    .success-modal-icon svg {
+        width: 40px;
+        height: 40px;
+        color: #28a745; /* Bootstrap success green */
+    }
+</style>
 @endsection
 
 @section('body')
- <section class="page-hero-section px-md-0 px-3">
+  <section class="page-hero-section px-md-0 px-3">
       <div class="container">
         <div class="row">
           <div class="col-12 text-center">
@@ -20,7 +47,7 @@
     </section>
 
     <section class="checkout-section overflow-hidden">
-      <form action="{{ route('checkout.place.order') }}" method="POST">
+      <form id="checkoutForm" action="{{ route('checkout.place.order') }}" method="POST">
         @csrf
         <div class="row">
           <div class="col-md-12">
@@ -53,31 +80,25 @@
             </div>
               </div>
 
-              @if ($errors->any())
-                  <div class="alert alert-danger mx-3">
-                      <ul>
-                          @foreach ($errors->all() as $error)
-                              <li>{{ $error }}</li>
-                          @endforeach
-                      </ul>
-                  </div>
-              @endif
+              <div id="checkout-errors" class="alert alert-danger mx-3" style="display: none;"></div>
+
 
               <div class="row border-top">
                 <div class="col-lg-6">
                   <div class="pick-checkout-shipping-section">
                     <h4 class="pick-checkout-section-title pt-3">Shipping Information</h4>
-                      <div class="pick-checkout-delivery-options">
-                    <div
-                      class="pick-checkout-delivery-option active d-flex gap-1 justify-content-center align-items-center">
-                      <img src="{{asset('/')}}public/front/assets/img/trucks.png" alt="">
-                      <div>Delivery</div>
+                       <div class="pick-checkout-delivery-options">
+                      <div class="pick-checkout-delivery-option active d-flex gap-1 justify-content-center align-items-center" data-delivery-type="delivery">
+                        <img src="{{asset('/')}}public/front/assets/img/trucks.png" alt="Delivery Truck">
+                        <div>Delivery</div>
+                      </div>
+                      <div class="pick-checkout-delivery-option d-flex gap-1 justify-content-center align-items-center" data-delivery-type="pickup">
+                        <img src="{{asset('/')}}public/front/assets/img/boxx.png" alt="Pickup Box">
+                        <div>Pick Up</div>
+                      </div>
                     </div>
-                    <div class="pick-checkout-delivery-option d-flex gap-1 justify-content-center align-items-center">
-                      <img src="{{asset('/')}}public/front/assets/img/boxx.png" alt="">
-                      <div>Pick Up</div>
-                    </div>
-                  </div>
+
+                    <input type="hidden" name="delivery_type" id="delivery_type" value="delivery">
                     
                       <div class="row">
                         <div class="col-12 mb-3">
@@ -214,8 +235,8 @@
                       </div>
 
                       <div class="d-flex justify-content-center">
-                        <button type="submit" class="pick-checkout-pay-now-btn">
-                          Pay Now - <span id="pay-now-total">৳{{ number_format($total, 2) }}</span>
+                        <button type="submit" id="placeOrderBtn" class="pick-checkout-pay-now-btn">
+                          Place Order - <span id="pay-now-total">৳{{ number_format($total, 2) }}</span>
                         </button>
                       </div>
                     </div>
@@ -227,10 +248,84 @@
         </div>
       </form>
     </section>
+
+    <!-- SUCCESS MODAL -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center p-4">
+          <div class="modal-header border-0">
+             <button type="button" class="btn-close" aria-label="Close" onclick="window.location.href='{{ route('home.index') }}'"></button>
+          </div>
+          <div class="modal-body">
+            <div style="text-align: center; padding: 20px;">
+                        <div>
+                            <img style="width:50px" src="{{asset('/')}}public/front/assets/img/step-done.png"/>
+                        </div>
+                        <h4 class="mt-3" style="color: #212529; font-weight: 600; margin-bottom: 15px;">Woohoo! Payment Received</h2>
+                        <p style="color: #42444D; margin-bottom: 25px; line-height: 1.5; font-size:15px">
+                            Thank you for your purchase!<br>
+                            Your order is being processed and will be on its way shortly. <br>
+                            You'll receive a confirmation email with the details soon.
+                        </p>
+                        <button onclick="printInvoice()"
+                          style="background: #f2fbff; color: #00AAFF; border: none; padding: 12px 24px; border-radius:
+                          6px; font-weight: 500; cursor: pointer; border: 1px solid #00AAFF;">
+                            Print Invoice
+                        </button>
+                    </div>
+            {{-- <a href="#" id="printInvoiceBtn" class="btn btn-outline-primary mt-3" style="display: none;">Print Invoice</a> --}}
+          </div>
+        </div>
+      </div>
+    </div>
 @endsection
 
 @section('script')
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- NEW SCRIPT FOR DELIVERY TYPE SELECTION ---
+    const deliveryOptions = document.querySelectorAll('.pick-checkout-delivery-option');
+    const deliveryTypeInput = document.getElementById('delivery_type');
+
+    deliveryOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove 'active' class from all options
+            deliveryOptions.forEach(opt => opt.classList.remove('active'));
+            
+            // Add 'active' class to the clicked option
+            this.classList.add('active');
+            
+            // Update the hidden input's value
+            const selectedType = this.dataset.deliveryType;
+            deliveryTypeInput.value = selectedType;
+
+            console.log('Selected Delivery Type:', selectedType); // For debugging
+        });
+    });
+
+    // ... your other existing scripts ...
+});
+</script>
+<script>
+
+   // This variable must be in the global scope so the printInvoice function can access it.
+    let successfulOrderId = null;
+
+    // This function is moved to the global scope so the button's onclick attribute can find it.
+    function printInvoice() {
+        if (successfulOrderId) {
+            // Create a URL template using the route() helper with a placeholder ('__ID__').
+            let urlTemplate = "{{ route('invoice.print', ['order' => '__ID__']) }}";
+            
+            // Use JavaScript's replace() method to substitute the placeholder with the actual order ID.
+            const url = urlTemplate.replace('__ID__', successfulOrderId);
+
+            // Open the final, correct URL in a new tab.
+            window.open(url, '_blank');
+        } else {
+            alert('Could not find the order ID. Please refresh the page.');
+        }
+    }
 
   // Delivery option toggle
     document.querySelectorAll('.pick-checkout-delivery-option').forEach(option => {
@@ -365,6 +460,68 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
+
+    // --- AJAX FORM SUBMISSION FOR PLACING ORDER ---
+    const checkoutForm = document.getElementById('checkoutForm');
+    const placeOrderBtn = document.getElementById('placeOrderBtn');
+    const checkoutErrors = document.getElementById('checkout-errors');
+// let successfulOrderId = null; 
+    if(checkoutForm) {
+        checkoutForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const originalBtnText = placeOrderBtn.innerHTML;
+            placeOrderBtn.disabled = true;
+            placeOrderBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Placing Order...`;
+            checkoutErrors.style.display = 'none';
+            checkoutErrors.innerHTML = '';
+
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': formData.get('_token') }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    // const printBtn = document.getElementById('printInvoiceBtn');
+                    // printBtn.href = `/invoice/${data.order_id}`; // Example
+                      successfulOrderId = data.order_id; 
+                    successModal.show();
+                    updateCartCounter();
+                } else {
+                    let errorHtml = '<ul>';
+                    if(data.errors){
+                        for(const error in data.errors){
+                            errorHtml += `<li>${data.errors[error][0]}</li>`;
+                        }
+                    } else {
+                        errorHtml += `<li>${data.message || 'An error occurred.'}</li>`;
+                    }
+                    errorHtml += '</ul>';
+                    checkoutErrors.innerHTML = errorHtml;
+                    checkoutErrors.style.display = 'block';
+                    window.scrollTo(0, 0); // Scroll to top to see errors
+                }
+            })
+            .catch(error => {
+                console.error('Order placement error:', error);
+                checkoutErrors.innerHTML = 'A server error occurred. Please try again.';
+                checkoutErrors.style.display = 'block';
+            })
+            .finally(() => {
+                placeOrderBtn.disabled = false;
+                placeOrderBtn.innerHTML = originalBtnText;
+            });
+        });
+
+        
+    }
+
+   
 });
 </script>
 @endsection

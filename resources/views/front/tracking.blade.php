@@ -5,7 +5,13 @@ Order Tracking
 
 @section('css')
 <style>
-/* Custom styles for tracking progress bar feedback */
+
+    .order-tracking-progress-step.current .order-tracking-step-circle {
+    background-color: #000;
+    border-color: #000;
+}
+
+/* Custom styles for tracking progress bar */
 .order-tracking-progress-step.danger .order-tracking-step-circle {
     background-color: #dc3545;
     border-color: #dc3545;
@@ -16,6 +22,18 @@ Order Tracking
 .order-tracking-progress-container.cancelled .order-tracking-progress-step.danger::after {
     display: none;
 }
+/* Custom styles for tracking progress bar */
+.order-tracking-progress-step.danger .order-tracking-step-circle {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+.order-tracking-progress-container.cancelled .order-tracking-progress-step:not(:first-child) {
+    display: none;
+}
+.order-tracking-progress-container.cancelled .order-tracking-progress-step.danger::after {
+    display: none;
+}
+
 </style>
 @endsection
 
@@ -36,105 +54,183 @@ Order Tracking
 
 
    <div class="pick-order-tracking overflow-hidden mt-5 pt-3 px-md-0 px-3">
-     <!-- Search Section -->
-     <div class="row mb-4">
-       <div class="col-12">
-         <div class="d-flex w-50 gap-2 justify-content-center m-auto order-track-input mb-3">
-           <input type="text" class="form-control" placeholder="Enter Order Number" id="orderInput">
-           <button class="btn px-4" type="button" id="trackOrderBtn">Track Order</button>
-         </div>
-         <div id="tracking-error" class="text-center text-danger mt-2"></div>
-       </div>
-     </div>
+     
+            <!-- Search Section -->
+            <div class="d-flex w-50 gap-2 justify-content-center m-auto order-track-input mb-3">
+              <input type="text" class="form-control" placeholder="Enter Order Number" id="invoice-no-input">
+              <button class="btn px-4" type="button" id="track-order-btn">Track Order</button>
+            </div>
+      
 
-    <!-- Dynamic Results Container -->
-    <div id="tracking-results" style="display: none;">
-         <!-- Order Detail Section -->
-         <div class="row mb-4">
-           <div class="col-12">
-             <div class="card border-0">
-               <div class="card-body p-0">
-                 <div class="d-flex justify-content-between align-items-start mb-3">
-                   <div>
-                     <h5 class="mb-1 tracing-headline">Order Detail</h5>
-                     <small class="text-muted">Order Number: <span id="track-invoice-no"></span></small>
-                   </div>
-                   <div class="text-end end-transit">
-                     <span class="badge text-dark px-3 py-2" id="track-status-badge"></span>
-                     <div class="mt-1">
-                       <small class="text-muted">Order Date: <span id="track-order-date"></span></small>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-             </div>
-           </div>
-         </div>
+        <div id="tracking-loader" class="text-center my-5" style="display: none;">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
 
-         <!-- Track Order Progress -->
-         <div class="row mb-5">
-           <div class="col-12">
-             <h6 class="mb-4 track-order">Track Order</h6>
-             <div class="order-tracking-progress-container" id="tracking-progress-bar">
-                <!-- Progress steps will be dynamically injected here -->
-             </div>
-           </div>
-         </div>
+        <div id="tracking-error" class="alert alert-danger text-center my-4" style="display: none;"></div>
 
-         <!-- Orders Table -->
-         <div class="row">
-           <div class="col-12">
-             <div class="profile-table-section mb-5 pt-3 ps-2">
-               <div class="profile-table-responsive">
-                 <table class="table table-hover profile-custom-table">
-                   <thead>
-                     <tr>
-                       <th>Order No.</th>
-                       <th>Purchase Date</th>
-                       <th>Payment Status</th>
-                       <th>Price</th>
-                       <th>Item Qty.</th>
-                       <th>Order Status</th>
-                     </tr>
-                   </thead>
-                   <tbody id="tracking-table-body">
-                     <!-- Order row will be dynamically injected here -->
-                   </tbody>
-                 </table>
-               </div>
-             </div>
-           </div>
-         </div>
+        <div id="tracking-results-container" style="display: none;">
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0">
+                        <div class="card-body p-0">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="mb-1 tracing-headline">Order Details</h5>
+                                    <small class="text-muted">Order Number: <span id="tracking-invoice-no" class="fw-bold"></span></small>
+                                </div>
+                                <div class="text-end end-transit">
+                                    <span id="tracking-status-badge" class="badge text-dark px-3 py-2 text-capitalize"></span>
+                                    <div class="mt-1">
+                                        <small class="text-muted">Order Date: <span id="tracking-order-date"></span></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h6 class="mb-4 track-order">Track Order</h6>
+                    <div id="progress-bar-container" class="order-tracking-progress-container">
+                        <div class="order-tracking-progress-step" data-status="pending">
+                            <div class="order-tracking-step-circle"></div>
+                            <div class="order-tracking-step-content">
+                                <div class="order-tracking-step-title">Pending</div>
+                                <div class="order-tracking-step-date"></div>
+                            </div>
+                        </div>
+                        <div class="order-tracking-progress-step" data-status="waiting">
+                            <div class="order-tracking-step-circle"></div>
+                            <div class="order-tracking-step-content">
+                                <div class="order-tracking-step-title">Waiting</div>
+                                <div class="order-tracking-step-date"></div>
+                            </div>
+                        </div>
+                        <div class="order-tracking-progress-step" data-status="ready to ship">
+                            <div class="order-tracking-step-circle"></div>
+                            <div class="order-tracking-step-content">
+                                <div class="order-tracking-step-title">Ready to Ship</div>
+                                <div class="order-tracking-step-date"></div>
+                            </div>
+                        </div>
+                        <div class="order-tracking-progress-step" data-status="shipping">
+                            <div class="order-tracking-step-circle"></div>
+                            <div class="order-tracking-step-content">
+                                <div class="order-tracking-step-title">Shipping</div>
+                                <div class="order-tracking-step-date"></div>
+                            </div>
+                        </div>
+                        <div class="order-tracking-progress-step" data-status="delivered">
+                            <div class="order-tracking-step-circle"></div>
+                            <div class="order-tracking-step-content">
+                                <div class="order-tracking-step-title">Delivered</div>
+                                <div class="order-tracking-step-date"></div>
+                            </div>
+                        </div>
+                        <div class="order-tracking-progress-step d-none" data-status="cancelled">
+                             <div class="order-tracking-step-circle"></div>
+                             <div class="order-tracking-step-content">
+                                 <div class="order-tracking-step-title">Cancelled</div>
+                                 <div class="order-tracking-step-date"></div>
+                             </div>
+                         </div>
+                         <div class="order-tracking-progress-step d-none" data-status="failed to delivery">
+                             <div class="order-tracking-step-circle"></div>
+                             <div class="order-tracking-step-content">
+                                 <div class="order-tracking-step-title">Failed to Deliver</div>
+                                 <div class="order-tracking-step-date"></div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+<div class="row">
+        <div class="col-12">
+            <h6 class="mb-3 track-order">Order Items</h6>
+            <div class="profile-table-section mb-5 pt-3 ps-2">
+                <div class="profile-table-responsive">
+                    <table class="table table-hover profile-custom-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Payment Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-items-tbody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-   </div>
+            <div class="row">
+                <div class="col-12">
+                    <h6 class="mb-3 track-order">Tracking History</h6>
+                    <div class="profile-table-section mb-5 pt-3 ps-2">
+                        <div class="profile-table-responsive">
+                            <table class="table table-hover profile-custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tracking-history-tbody">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 
 @section('script')
+{{-- Script for Dynamic Order Tracking --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const trackOrderBtn = document.getElementById('trackOrderBtn');
-    const orderInput = document.getElementById('orderInput');
-    const trackingResults = document.getElementById('tracking-results');
-    const trackingError = document.getElementById('tracking-error');
-
-    trackOrderBtn.addEventListener('click', function () {
-        const invoiceNo = orderInput.value.trim();
+    const trackBtn = document.getElementById('track-order-btn');
+    const invoiceInput = document.getElementById('invoice-no-input');
+    const loader = document.getElementById('tracking-loader');
+    const errorDiv = document.getElementById('tracking-error');
+    const resultsContainer = document.getElementById('tracking-results-container');
+    
+    // DOM elements for results
+    const invoiceNoSpan = document.getElementById('tracking-invoice-no');
+    const orderDateSpan = document.getElementById('tracking-order-date');
+    const statusBadge = document.getElementById('tracking-status-badge');
+    const progressBarContainer = document.getElementById('progress-bar-container');
+    const historyTbody = document.getElementById('tracking-history-tbody');
+    
+    const trackOrder = () => {
+        const invoiceNo = invoiceInput.value.trim();
         if (!invoiceNo) {
-            trackingError.textContent = 'Please enter an order number.';
+            errorDiv.textContent = 'Please enter an invoice number.';
+            errorDiv.style.display = 'block';
+            resultsContainer.style.display = 'none';
             return;
         }
 
         // Reset UI
-        trackingResults.style.display = 'none';
-        trackingError.textContent = '';
-        trackOrderBtn.disabled = true;
-        trackOrderBtn.textContent = 'Tracking...';
+        loader.style.display = 'block';
+        errorDiv.style.display = 'none';
+        resultsContainer.style.display = 'none';
 
-        fetch("{{ route('tracking.track') }}", {
+        fetch("{{ route('track.order') }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
             body: JSON.stringify({ invoice_no: invoiceNo })
@@ -146,83 +242,137 @@ document.addEventListener('DOMContentLoaded', function () {
             return response.json();
         })
         .then(data => {
-            displayTrackingInfo(data);
-            trackingResults.style.display = 'block';
+            if (data.error) {
+                 throw new Error(data.error);
+            }
+            renderTrackingInfo(data);
         })
-        .catch(err => {
-            trackingError.textContent = err.error || 'An unexpected error occurred.';
+        .catch(error => {
+            const errorMessage = error.message || 'Order not found or an error occurred.';
+            errorDiv.textContent = errorMessage;
+            errorDiv.style.display = 'block';
         })
         .finally(() => {
-            trackOrderBtn.disabled = false;
-            trackOrderBtn.textContent = 'Track Order';
+            loader.style.display = 'none';
         });
+    };
+
+    trackBtn.addEventListener('click', trackOrder);
+    // Allow tracking by pressing Enter
+    invoiceInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            trackOrder();
+        }
     });
 
-    function displayTrackingInfo(order) {
-        // --- 1. Update Header Details ---
-        document.getElementById('track-invoice-no').textContent = '#' + order.invoice_no;
-        document.getElementById('track-status-badge').textContent = order.status.charAt(0).toUpperCase() + order.status.slice(1);
-        document.getElementById('track-order-date').textContent = order.formatted_created_at;
+    function renderTrackingInfo(order) {
+    // 1. Populate Header & Progress Bar (existing logic)
+    invoiceNoSpan.textContent = `#${order.invoice_no}`;
+    orderDateSpan.textContent = order.formatted_created_at;
+    statusBadge.textContent = order.status;
+    renderProgressBar(order.status, order.tracking_history);
 
-        // --- 2. Update Progress Bar ---
-        const progressBar = document.getElementById('tracking-progress-bar');
-        const statuses = ['pending', 'processing', 'shipped', 'in_transit', 'delivered'];
-        const statusLabels = {
-            pending: 'Order Received',
-            processing: 'Generate Order',
-            shipped: 'Transmitted To Courier',
-            in_transit: 'Order Picked',
-            delivered: 'Order Delivered'
-        };
-        let currentStatusIndex = statuses.indexOf(order.status);
-        let html = '';
+    // 2. NEW: Render Order Items Table
+    const itemsTbody = document.getElementById('order-items-tbody');
+    itemsTbody.innerHTML = ''; // Clear previous results
+    if (order.order_details && order.order_details.length > 0) {
+        order.order_details.forEach(item => {
+            const row = document.createElement('tr');
+            // Create a badge for payment status
+            const paymentStatusBadge = order.payment_status === 'paid' 
+                ? `<span class="profile-badge success-bg">Paid</span>` 
+                : `<span class="profile-badge danger-bg">Unpaid</span>`;
 
-        statuses.forEach((status, index) => {
-            let stepClass = '';
-            if (index < currentStatusIndex) {
-                stepClass = 'completed';
-            } else if (index === currentStatusIndex) {
-                stepClass = 'current';
-            }
+            row.innerHTML = `
+                <td>${item.product_name || 'Product not found'}</td>
+                <td>${item.quantity}</td>
+                <td>৳ ${parseFloat(item.subtotal).toFixed(2)}</td>
+                <td class="text-capitalize">${paymentStatusBadge}</td>
+            `;
+            itemsTbody.appendChild(row);
+        });
+    } else {
+        itemsTbody.innerHTML = `<tr><td colspan="4" class="text-center">No items found for this order.</td></tr>`;
+    }
+    
+    // 3. Render Tracking History Table (existing logic)
+    historyTbody.innerHTML = ''; // Clear previous results
+    if (order.tracking_history && order.tracking_history.length > 0) {
+        order.tracking_history.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.bd_date || ''}</td>
+                <td>${item.bd_time || ''}</td>
+                <td class="text-capitalize">${item.status || ''}</td>
+            `;
+            historyTbody.appendChild(row);
+        });
+    } else {
+         const row = document.createElement('tr');
+         row.innerHTML = `<td colspan="3" class="text-center">No tracking history available yet.</td>`;
+         historyTbody.appendChild(row);
+    }
 
-            if (order.status === 'cancel') {
-                 if (index === 0) {
-                     html += `<div class="order-tracking-progress-step completed danger">
-                                <div class="order-tracking-step-circle"></div>
-                                <div class="order-tracking-step-content">
-                                    <div class="order-tracking-step-title">Order Cancelled</div>
-                                    <div class="order-tracking-step-date">${order.formatted_created_at}</div>
-                                </div>
-                            </div>`;
-                }
-            } else {
-                 html += `<div class="order-tracking-progress-step ${stepClass}">
-                            <div class="order-tracking-step-circle"></div>
-                            <div class="order-tracking-step-content">
-                                <div class="order-tracking-step-title">${statusLabels[status]}</div>
-                                <div class="order-tracking-step-date">${order.formatted_created_at}</div>
-                            </div>
-                        </div>`;
+    // 4. Show the results container (existing logic)
+    resultsContainer.style.display = 'block';
+}
+
+    function renderProgressBar(currentStatus, history) {
+        const lowerCurrentStatus = currentStatus.toLowerCase();
+        const isTerminal = ['cancelled', 'failed to delivery'].includes(lowerCurrentStatus);
+
+        // Create a map of statuses from history for quick lookup
+        const historyMap = new Map();
+        history.forEach(item => {
+            const status = item.status.toLowerCase();
+            if (!historyMap.has(status)) {
+                historyMap.set(status, item.bd_date);
             }
         });
-        progressBar.innerHTML = html;
-        if(order.status === 'cancel') progressBar.classList.add('cancelled');
-        else progressBar.classList.remove('cancelled');
+        
+        const allSteps = progressBarContainer.querySelectorAll('.order-tracking-progress-step');
 
-        // --- 3. Update Table ---
-        const tableBody = document.getElementById('tracking-table-body');
-        const paymentStatusClass = order.payment_status === 'paid' ? 'success-bg' : 'danger-bg';
-        const orderStatusClass = order.status === 'delivered' ? 'success-bg' : (order.status === 'cancel' ? 'warning-bg' : 'orange-bg');
-        tableBody.innerHTML = `
-            <tr>
-                <td>#${order.invoice_no}</td>
-                <td>${order.formatted_created_at}</td>
-                <td><span class="profile-badge ${paymentStatusClass}">${order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}</span></td>
-                <td>৳ ${parseFloat(order.total_amount).toFixed(2)}</td>
-                <td>${order.order_details_count}</td>
-                <td><span class="profile-badge ${orderStatusClass}">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span></td>
-            </tr>
-        `;
+        allSteps.forEach(step => {
+            const stepStatus = step.dataset.status;
+            const dateEl = step.querySelector('.order-tracking-step-date');
+
+            // Reset styles and content
+            step.classList.remove('completed', 'current', 'danger', 'd-none');
+            step.style.display = ''; // Reset display style
+            if(dateEl) dateEl.textContent = '';
+            
+            if (isTerminal) {
+                // If cancelled or failed, only show 'pending' and the terminal step
+                if(stepStatus !== 'pending' && stepStatus !== lowerCurrentStatus) {
+                   step.style.display = 'none';
+                }
+            } else {
+                 // Hide the terminal steps during a normal flow
+                 if (['cancelled', 'failed to delivery'].includes(stepStatus)) {
+                    step.style.display = 'none';
+                 }
+            }
+            
+            // Apply 'completed' class and date if status is in history
+            if (historyMap.has(stepStatus)) {
+                step.classList.add('completed');
+                if(dateEl) dateEl.textContent = historyMap.get(stepStatus);
+            }
+        });
+        
+        // Find the most recent step from history to mark as 'current'
+        const latestHistoryItem = history[0];
+        if (latestHistoryItem) {
+            const latestStatus = latestHistoryItem.status.toLowerCase();
+            const currentStep = progressBarContainer.querySelector(`.order-tracking-progress-step[data-status="${latestStatus}"]`);
+            if (currentStep) {
+                currentStep.classList.remove('completed'); // 'current' takes precedence
+                currentStep.classList.add('current');
+                if (isTerminal) {
+                    currentStep.classList.add('danger');
+                }
+            }
+        }
     }
 });
 </script>

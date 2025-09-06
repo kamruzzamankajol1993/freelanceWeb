@@ -45,7 +45,15 @@
             </div>
             @else
             <div class="user-icon d-none d-md-block">
+
+              @if(empty(Auth::user()->image))
+
+
                 <a href="{{route('dashboard.user')}}">  <img src="{{asset('/')}}public/front/assets/img/user.png" alt=""></a>
+                @else
+                <a href="{{route('dashboard.user')}}">  <img src="{{ Auth::user()->image ? asset('public/'.Auth::user()->image) : 'https://placehold.co/100x100?text=Avatar' }}" alt=""></a>
+
+                @endif
             </div>
             @endif
           </div>

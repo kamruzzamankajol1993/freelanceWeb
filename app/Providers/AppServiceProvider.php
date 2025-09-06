@@ -43,6 +43,13 @@ class AppServiceProvider extends ServiceProvider
         });
         ///new code start
 
+         // Using a view composer to share categories with all views
+        View::composer('*', function ($view) {
+            $pixelId= DB::table('analytic_settings')->where('id', 3)->value('value');
+            $view->with('pixelId', $pixelId);
+        });
+        ///new code start
+
         view()->composer('*', function ($view)
         {
 

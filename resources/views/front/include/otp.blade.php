@@ -30,10 +30,10 @@
                 <form method="POST" action="{{ route('otp.verify') }}" id="otpForm">
                     @csrf
                     <div class="d-flex justify-content-center my-4" id="otp-inputs">
-                        <input type="text" name="otp_1" class="otp-input" maxlength="1" data-index="0" placeholder="0" required>
-                        <input type="text" name="otp_2" class="otp-input" maxlength="1" data-index="1" placeholder="0" required>
-                        <input type="text" name="otp_3" class="otp-input" maxlength="1" data-index="2" placeholder="0" required>
-                        <input type="text" name="otp_4" class="otp-input" maxlength="1" data-index="3" placeholder="0" required>
+                        <input type="text" name="otp_1" class="otp-input" maxlength="1" data-index="0"  required>
+                        <input type="text" name="otp_2" class="otp-input" maxlength="1" data-index="1"  required>
+                        <input type="text" name="otp_3" class="otp-input" maxlength="1" data-index="2"  required>
+                        <input type="text" name="otp_4" class="otp-input" maxlength="1" data-index="3"  required>
                     </div>
                     {{-- The submit button is now removed --}}
                 </form>

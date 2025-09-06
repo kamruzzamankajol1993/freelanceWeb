@@ -16,6 +16,7 @@ class Order extends Model
         'shipping_cost',
         'discount',
         'payment_phone',
+        'delivery_type',
         'total_amount',
         'total_pay',
         'due',

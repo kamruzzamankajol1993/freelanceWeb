@@ -6,11 +6,55 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Coupon;
 use App\Models\Order;
+use Mpdf\Mpdf;
 use App\Models\OrderDetail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use App\Models\OrderTracking;
+use DateTimeZone;
+use DateTime;
 class CheckoutController extends Controller
 {
+
+    /**
+     * Generate and stream a PDF invoice for a given order.
+     */
+    public function printInvoice(Order $order)
+    {
+        // Security Check: Ensure the user owns this order
+        if (Auth::user()->customer_id !== $order->customer_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Load necessary related data
+        $order->load('customer', 'orderDetails.product');
+        
+        // You can get the watermark logo from your assets
+        // For mPDF to access it, we need the server path, not the web URL
+        $watermarkPath = public_path('front/assets/img/page-bg.png'); 
+
+        // Pass data to the view
+        $data = [
+            'order' => $order,
+            'watermarkPath' => $watermarkPath
+        ];
+
+        // Render the view to HTML
+        $html = view('front.checkout.invoice', $data)->render();
+
+        // Create an instance of mPDF
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            
+        ]);
+
+        // Write HTML content to the PDF
+        $mpdf->WriteHTML($html);
+
+        // Output the PDF to the browser
+        return $mpdf->Output('invoice-'.$order->invoice_no.'.pdf', 'I');
+    }
     
          public function checkOutPage()
     {
@@ -136,7 +180,8 @@ class CheckoutController extends Controller
 
     public function placeOrder(Request $request)
     {
-        $request->validate([
+        $paymentTypes = ['bkash', 'nagad', 'rocket'];
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
@@ -144,58 +189,52 @@ class CheckoutController extends Controller
             'shipping_address' => 'required|string',
             'shipping_area' => 'required|numeric',
             'payment_type' => 'required|string',
+            'payment_phone' => ['required_if:payment_type,in,'.implode(',', $paymentTypes), 'nullable', 'string', 'max:20'],
+            'payment_trxid' => ['required_if:payment_type,in,'.implode(',', $paymentTypes), 'nullable', 'string', 'max:255'],
             'terms' => 'accepted'
         ]);
 
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
         $cartData = $this->getCartTotals();
         if (empty($cartData['cartItems'])) {
-            return back()->with('error', 'Your session expired. Please try again.');
+            return response()->json(['success' => false, 'message' => 'Your session has expired.'], 400);
         }
 
         DB::beginTransaction();
         try {
             
-            if($request->payment_type == 'cod'){
-                
-                            $order = Order::create([
+            $orderData = [
                 'customer_id' => Auth::user()->customer_id,
                 'invoice_no' => 'INV-' . time() . rand(10, 99),
                 'subtotal' => $cartData['subtotal'],
                 'shipping_cost' => $cartData['shippingCost'],
                 'discount' => $cartData['discount'],
                 'total_amount' => $cartData['total'],
-                'total_pay' => 0,
-                'cod' => $cartData['total'],
                 'status' => 'pending',
+                'delivery_type' => $request->delivery_type,
                 'shipping_address' => $request->shipping_address,
                 'billing_address' => $request->billing_address,
                 'payment_method' => $request->payment_type,
                 'payment_phone' => $request->payment_phone,
                 'trxID' => $request->payment_trxid,
-                'payment_status' => 'unpaid',
                 'notes' => $request->note,
-            ]);
-                
-            }else{
-            $order = Order::create([
-                'customer_id' => Auth::user()->customer_id,
-                'invoice_no' => 'INV-' . time() . rand(10, 99),
-                'subtotal' => $cartData['subtotal'],
-                'shipping_cost' => $cartData['shippingCost'],
-                'discount' => $cartData['discount'],
-                'total_amount' => $cartData['total'],
-                'total_pay' => $cartData['total'],
-                'cod' => 0,
-                'status' => 'pending',
-                'shipping_address' => $request->shipping_address,
-                'billing_address' => $request->billing_address,
-                'payment_method' => $request->payment_type,
-                'payment_phone' => $request->payment_phone,
-                'trxID' => $request->payment_trxid,
-                'payment_status' => 'paid',
-                'notes' => $request->note,
-            ]);
-}
+            ];
+
+            if ($request->payment_type == 'cod') {
+                $orderData['payment_status'] = 'unpaid';
+                $orderData['total_pay'] = 0;
+                $orderData['cod'] = $cartData['total'];
+            } else {
+                $orderData['payment_status'] = 'paid';
+                $orderData['total_pay'] = $cartData['total'];
+                $orderData['cod'] = 0;
+            }
+            
+            $order = Order::create($orderData);
+
             foreach($cartData['cartItems'] as $item) {
                 OrderDetail::create([
                     'order_id' => $order->id,
@@ -211,12 +250,31 @@ class CheckoutController extends Controller
 
             DB::commit();
             Session::forget(['cart', 'checkout']);
-            return redirect()->route('order.success')->with('order_id', $order->id);
+
+
+              $tz = new DateTimeZone('Asia/Dhaka');
+             $dt = new DateTime('now', $tz);
+             $now = $dt->format('h:i:s');
+
+       
+
+          $newtracking = new OrderTracking();
+          $newtracking->customer_id =  $order->customer_id;
+          $newtracking->tracking_number = $order->invoice_no;
+          $newtracking->status = 'pending';
+          $newtracking->bd_time = $now;
+          $newtracking->bd_date = date('Y-m-d');
+          $newtracking->save();
+
+       
+            
+            // Return a success response with the new order ID
+            return response()->json(['success' => true, 'order_id' => $order->id]);
 
         } catch (\Exception $e) {
             DB::rollBack();
              \Log::error('Order Placement Failed: ' . $e->getMessage());
-            return back()->with('error', 'Something went wrong while placing your order. Please try again.');
+            return response()->json(['success' => false, 'message' => 'Something went wrong.'], 500);
         }
     }
 

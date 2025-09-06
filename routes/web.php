@@ -6,6 +6,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\AccountSettingsController;
 
 Route::get('/clear', function() {
     \Illuminate\Support\Facades\Artisan::call('cache:clear');
@@ -19,6 +20,7 @@ Route::get('/clear', function() {
 Route::controller(CheckoutController::class)->group(function () {
 
     Route::get('/checkOutPage', 'checkOutPage')->name('checkOutPage');
+     Route::get('/invoice/{order}/print', 'printInvoice')->name('invoice.print');
 Route::post('/checkout/update-shipping', 'updateShipping')->name('checkout.shipping.update');
     Route::post('/checkout/apply-coupon', 'applyCoupon')->name('checkout.coupon.apply');
     Route::post('/checkout/remove-coupon', 'removeCoupon')->name('checkout.coupon.remove');
@@ -99,4 +101,10 @@ Route::controller(PasswordResetController::class)->group(function () {
     Route::post('/password-email', 'sendResetOtp')->name('password.email');
     Route::post('/password-verify-otp', 'verifyResetOtp')->name('password.verify.otp');
     Route::post('/password-update', 'updatePassword')->name('password.update');
+});
+
+// --- ACCOUNT DEACTIVATION/DELETION (requires login) ---
+Route::controller(AccountSettingsController::class)->middleware('auth')->prefix('account')->name('account.')->group(function () {
+    Route::post('/deactivate', 'deactivate')->name('deactivate');
+    Route::post('/delete', 'delete')->name('delete');
 });

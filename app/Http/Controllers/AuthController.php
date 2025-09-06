@@ -114,7 +114,8 @@ class AuthController extends Controller
             'address' => $tempUserData['address'],
             'password' => Hash::make($tempUserData['password']),
             'viewpassword' => $tempUserData['password'],
-            'user_type' => 2,
+            'user_type' => 1,
+            'status' => 1,
         ]);
 
         $customer = Customer::create([
@@ -159,6 +160,26 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+
+$userStatus = User::where('email',$request->email)->value('status');
+        $userEmail = User::where('email',$request->email)->value('user_type');
+
+        if($userStatus == 0){
+
+ return back()->withErrors([
+            'email' => 'account inactive.',
+        ]);
+
+        }
+
+        if($userEmail == 2){
+
+ return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ]);
+
+        }
+
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -268,7 +289,7 @@ $otp = random_int(1000, 9999);
             return back()->withInput($request->only('email'))->withErrors(['email' => 'This password reset token has expired.']);
         }
 
-        $user = User::where('email', $request->email)->firstOrFail();
+        $user = User::where('email', $request->email)->where('user_type',1)->where('status',1)->firstOrFail();
         
         $user->password = Hash::make($request->password);
         $user->viewpassword = $request->password;
@@ -284,26 +305,42 @@ $otp = random_int(1000, 9999);
         return redirect()->route('dashboard.user')->with('status', 'Your password has been changed!');
     }
 
-     // --- NEW ORDER TRACKING METHOD ---
-    public function trackOrder(Request $request)
+      public function trackOrder(Request $request)
     {
         $request->validate(['invoice_no' => 'required|string']);
-
         $user = Auth::user();
 
-        // Ensure the user has a customer profile
-        if (!$user->customer) {
-            return response()->json(['error' => 'No customer profile found for this user.'], 404);
+        if (!$user->customer_id) {
+            return response()->json(['error' => 'No customer profile found.'], 404);
         }
-
-        $order = Order::where('invoice_no', $request->invoice_no)
-                      ->where('customer_id', $user->customer_id)
-                      ->withCount('orderDetails') // Get item quantity
-                      ->first();
+        
+        // 1. Fetch the order using Query Builder
+        $order = DB::table('orders')
+            ->where('invoice_no', $request->invoice_no)
+            ->where('customer_id', $user->customer_id)
+            ->first();
 
         if ($order) {
-            // Manually format the date to ensure consistency
-            $order->formatted_created_at = $order->created_at->format('d M Y');
+            // 2. Fetch the tracking history for that order
+            $trackingHistory = DB::table('order_trackings')
+                ->where('tracking_number', $order->invoice_no)
+                ->latest('id') // Order by the most recent entry
+                ->get();
+            
+            // 3. NEW: Fetch the order details (items) for that order
+            $orderDetails = DB::table('order_details')
+                ->join('products', 'order_details.product_id', '=', 'products.id')
+                ->where('order_id', $order->id)
+                ->select('order_details.*', 'products.name as product_name')
+                ->get();
+
+            // 4. Attach the history and details to the order object
+            $order->tracking_history = $trackingHistory;
+            $order->order_details = $orderDetails; // Attach the items
+
+            // 5. Manually format the main order date for the header display
+            $order->formatted_created_at = \Carbon\Carbon::parse($order->created_at)->format('d M Y');
+
             return response()->json($order);
         }
 
